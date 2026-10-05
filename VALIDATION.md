@@ -1,6 +1,16 @@
 # Validação · 5 de outubro de 2026
 
-## Escopo de testes
+## Atualização 1.0.1 — manual realista
+
+Build final offline a partir de pasta de build nova: 59 tarefas, BUILD SUCCESSFUL. Verificações anteriores do mesmo código: 22/22 testes aprovados e compilação instrumentada aprovada. Lint release final sem erros nem warnings. AAB 1.0.1 (versionCode 2) assinado e verificado com jarsigner; ZIP íntegro e somente seis PNGs locais 1200×1500. SHA-256: `d9870f6c171b1dfe89d3e763a8c13af833feedc43529597c5cc3d8b955a79e95`.
+
+Arte substituída conforme novo prompt: adulto fotorealista de frente, base idêntica em todos os estados. Comparação de pixels limita todas as diferenças ao indicador pélvico (x526..674/y718..886). GIFs exportados de 10 s e 2 s sem texto/números. Android controla fases e contador nativo com numerais tabulares; sobreposição acima da cabeça em fonte padrão, abaixo da imagem em fonte ampliada.
+
+Dois novos testes cobrem contagem 3/2/1 e 6/5/4/3/2/1, fronteiras preparar/contrair/manter/relaxar, ciclos rápidos e tempo real com callbacks atrasados. Captura nativa final do manual escuro inspecionada: personagem frontal e contador uniforme. Testes compactos em 1,6× aprovados. Pausa/background interrompem callbacks da demonstração e preservam o tempo acumulado. Testes em aparelho real permanecem pendentes.
+
+O build incremental inicial falhou em compileReleaseArtProfile; recompilação completa regenerou o perfil e passou. Uma execução de verificação foi interrompida pelo acesso de rede às dependências e foi concluída offline. A inspeção do AAB identificou assets antigos retidos no cache; a compilação final em pasta nova eliminou todos os seis assets antigos. Aviso de sessões múltiplas de Kotlin não afetou o resultado.
+
+## Escopo de testes da versão inicial
 
 Domínio: duração de todos os presets, limites/valores inválidos, fase no tempo real, callbacks atrasados, pausa/retomada, restauração, intervalo entre séries, relaxamento final, cancelamento, progressão, streak e horários com mudança de semana/DST.
 
