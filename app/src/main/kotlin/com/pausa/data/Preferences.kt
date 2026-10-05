@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.pausa.domain.*
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
+import java.io.IOException
 import org.json.*
 
 private val Context.store by preferencesDataStore("preferences")
@@ -19,14 +21,16 @@ class PreferencesRepository(private val context: Context) {
     private val workout = stringPreferencesKey("workout")
     private val week = intPreferencesKey("week")
     private val started = longPreferencesKey("program_started")
-    val settings = context.store.data.map { p ->
+    val settings = context.store.data.catch { error ->
+        if(error is IOException) emit(emptyPreferences()) else throw error
+    }.map { p ->
         Settings(UserPreferences(p[onboard] ?: false,
             runCatching { Guidance.valueOf(p[guide] ?: "BOTH") }.getOrDefault(Guidance.BOTH),
             p[discreet] ?: false,
             runCatching { AppTheme.valueOf(p[theme] ?: "SYSTEM") }.getOrDefault(AppTheme.SYSTEM),
             p[progression] ?: true),
             runCatching { Codec.workout(JSONObject(p[workout] ?: "")) }.getOrDefault(Workout("program", "Programa · semana 1",listOf(ProgressionPlan.weeks[0]))),
-            p[week] ?: 0, p[started] ?: 0)
+            (p[week] ?: 0).coerceIn(0..3), (p[started] ?: 0).coerceAtLeast(0))
     }
     suspend fun user(value: UserPreferences) { context.store.edit {
         it[onboard]=value.onboardingDone; it[guide]=value.guidance.name; it[discreet]=value.discreetScreen
@@ -50,6 +54,10 @@ object Codec {
         } },j.getInt("sets"),j.getInt("rest"))
     fun session(s:WorkoutSession,programWeek:Int):String=JSONObject().put("id",s.id).put("workout",workout(s.workout))
         .put("started",s.startedAtMillis).put("elapsed",s.elapsedMillis).put("status",s.status.name).put("week",programWeek).toString()
+    fun recoverableSession(raw:String):WorkoutSession = session(raw).also {
+        require(it.status in listOf(SessionStatus.RUNNING,SessionStatus.PAUSED))
+        require(it.elapsedMillis>=0 && it.elapsedMillis<it.workout.durationMillis)
+    }
     fun session(raw:String):WorkoutSession=JSONObject(raw).let {
         WorkoutSession(it.getString("id"),workout(it.getJSONObject("workout")),it.getLong("started"),
             it.getLong("elapsed"),SessionStatus.valueOf(it.getString("status")))

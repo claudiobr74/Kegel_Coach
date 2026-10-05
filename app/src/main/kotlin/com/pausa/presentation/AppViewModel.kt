@@ -25,7 +25,8 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
         viewModelScope.launch {
             if(SessionState.state.value==null) {
                 dao.active()?.let { active ->
-                    val s=runCatching {Codec.session(active.payload)}.getOrNull()
+                    val s=runCatching {Codec.recoverableSession(active.payload)}.getOrNull()
+                    if(s==null)dao.deleteActive()
                     if(s!=null && s.status in listOf(SessionStatus.RUNNING,SessionStatus.PAUSED) && SessionState.state.value==null) {
                         SessionState.state.value=WorkoutTimer({android.os.SystemClock.elapsedRealtime()},s.copy(status=SessionStatus.PAUSED)).state()
                         SessionState.message.value="Sessão recuperada em pausa."
@@ -38,7 +39,8 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
     fun updateUser(transform:(UserPreferences)->UserPreferences) {viewModelScope.launch {
         lock.withLock {prefs.user(transform(prefs.settings.first().user))}
         if(SessionState.serviceAlive)
-            WorkoutService.send(getApplication(),WorkoutService.GUIDANCE)
+            runCatching {WorkoutService.send(getApplication(),WorkoutService.GUIDANCE)}
+                .onFailure {SessionState.message.value="Reabra a sessão para aplicar a orientação."}
     }}
     fun selectWorkout(workout:Workout) {viewModelScope.launch {prefs.workout(workout)}}
     fun start(workout:Workout,pocket:Boolean=false) {viewModelScope.launch {
@@ -61,7 +63,7 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
         if(!r.enabled) {
             scheduler.cancel(r)
             getApplication<Application>().getSystemService(android.app.NotificationManager::class.java).cancel(r.id,200)
-        } else scheduler.schedule(r)
+        } else {scheduler.cancel(r);scheduler.schedule(r)}
     }}
     fun removeReminder(r:ReminderEntity) {viewModelScope.launch {
         ReminderScheduler(getApplication()).cancel(r);dao.deleteReminder(r.id)

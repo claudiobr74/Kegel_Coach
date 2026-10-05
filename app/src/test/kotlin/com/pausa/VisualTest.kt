@@ -86,11 +86,11 @@ class VisualTest {
         val timer=WorkoutTimer({now},WorkoutSession("visual",WorkoutPreset.beginner,0,0,SessionStatus.RUNNING))
         SessionState.state.value=timer.state()
         compose.onNodeWithText("VOLTAR AO TREINO").performClick()
-        compose.onNodeWithContentDescription("Contraia").assertExists()
+        compose.onNodeWithContentDescription("Contraia, 3 segundos restantes").assertExists()
         capture("session-contract-dark")
         now=3000L
         SessionState.state.value=timer.state()
-        compose.onNodeWithContentDescription("Relaxe").assertExists()
+        compose.onNodeWithContentDescription("Relaxe, 6 segundos restantes").assertExists()
         capture("session-relax-dark")
         SessionState.state.value=null
     }

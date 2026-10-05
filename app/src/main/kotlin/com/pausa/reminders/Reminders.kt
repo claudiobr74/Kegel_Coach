@@ -47,10 +47,10 @@ class ReminderScheduler(private val context:Context) {
         expanded.setOnClickPendingIntent(R.id.snooze10,pending(r,minutes=10))
         expanded.setOnClickPendingIntent(R.id.snooze30,pending(r,minutes=30))
         expanded.setOnClickPendingIntent(R.id.snooze60,pending(r,minutes=60))
-        val notification=NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_pausa)
+        val notification=NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Pausa").setContentText("Hora de uma pausa rápida").setContentIntent(start)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setAutoCancel(true)
-            .setPublicVersion(NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_pausa)
+            .setPublicVersion(NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("Pausa").setContentText("Hora de uma pausa rápida").build())
             .setStyle(NotificationCompat.DecoratedCustomViewStyle()).setCustomBigContentView(expanded)
             .addAction(0,"Iniciar",start).addAction(0,"Adiar 10 min",pending(r,minutes=10)).build()
@@ -73,8 +73,9 @@ class ReminderReceiver:BroadcastReceiver() {
                     if(minutes in listOf(10,30,60))scheduler.snooze(r,minutes)
                     context.getSystemService(NotificationManager::class.java).cancel(r.id,200)
                 } else {
-                    scheduler.notify(r)
-                    if(!intent.getBooleanExtra("snoozed",false))scheduler.schedule(r)
+                    val snoozed=intent.getBooleanExtra("snoozed",false)
+                    if(snoozed || LocalDate.now().dayOfWeek in r.domain().days)scheduler.notify(r)
+                    if(!snoozed)scheduler.schedule(r)
                 }
             } finally {result.finish()}
         }

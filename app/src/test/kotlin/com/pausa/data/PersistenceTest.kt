@@ -24,6 +24,17 @@ class PersistenceTest {
         db=Room.inMemoryDatabaseBuilder(context,PausaDatabase::class.java).allowMainThreadQueries().build()
     }
     @After fun close() {db.close()}
+    @Test fun onlyIncompleteLiveSessionsCanBeRecovered() {
+        val w=WorkoutPreset.beginner
+        for(status in listOf(SessionStatus.COMPLETED,SessionStatus.CANCELLED)) {
+            val s=WorkoutSession("id",w,0,1000,status)
+            assertTrue(runCatching {Codec.recoverableSession(Codec.session(s,-1))}.isFailure)
+        }
+        val terminal=WorkoutSession("id",w,0,w.durationMillis,SessionStatus.PAUSED)
+        assertTrue(runCatching {Codec.recoverableSession(Codec.session(terminal,-1))}.isFailure)
+        val paused=terminal.copy(elapsedMillis=1234)
+        assertEquals(paused,Codec.recoverableSession(Codec.session(paused,-1)))
+    }
     @Test fun mixedWorkoutSurvivesSerialization() {
         assertEquals(WorkoutPreset.mixed,Codec.workout(JSONObject(Codec.workout(WorkoutPreset.mixed).toString())))
     }

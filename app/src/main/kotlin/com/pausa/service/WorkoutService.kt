@@ -39,6 +39,8 @@ class WorkoutService : Service() {
     private var programWeek = -1
     private var lastCheckpoint: WorkoutSession? = null
     private var tone: ToneGenerator? = null
+    private var lastObserved: TimerState? = null
+    private var lastObservedAt = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -72,7 +74,7 @@ class WorkoutService : Service() {
                 if(timer != null) return
                 val existing = dao.active()
                 if(existing != null) {
-                    restore(existing)
+                    if(!restore(existing))return
                     SessionState.message.value="Seu treino anterior está pausado. Retome ou encerre."
                     publish(); return
                 }
@@ -86,28 +88,42 @@ class WorkoutService : Service() {
                 if(timer==null) {
                     val active=dao.active()
                     if(active==null){ stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return }
-                    restore(active)
+                    if(!restore(active))return
                 }
                 timer?.resume(); checkpoint();begin()
             }
             PAUSE -> {
-                ticker?.cancel();timer?.pause();releaseWake();vibrator()?.cancel()
+                ticker?.cancel()
+                val current=timer?.state()
+                val previous=lastObserved
+                if(previous!=null && current!=null && previous.session.status==SessionStatus.RUNNING && current.session.status in listOf(SessionStatus.RUNNING,SessionStatus.COMPLETED) &&
+                    CueContinuity.interrupted(lastObservedAt,SystemClock.elapsedRealtime(),previous.phaseIndex,current.phaseIndex)) {
+                    timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
+                    SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
+                } else timer?.pause()
+                releaseWake();vibrator()?.cancel();tone?.stopTone()
                 val state=timer?.state()
                 if(state?.session?.status==SessionStatus.COMPLETED)finish(state) else {checkpoint();publish()}
             }
             CANCEL -> {
-                ticker?.cancel();timer?.cancel();releaseWake();vibrator()?.cancel()
+                ticker?.cancel();timer?.cancel();releaseWake();vibrator()?.cancel();tone?.stopTone()
                 dao.deleteActive();SessionState.state.value=null
                 stopForeground(STOP_FOREGROUND_REMOVE);stopSelf()
             }
-            GUIDANCE -> { /* preferences refreshed above; active session remains unchanged */ }
+            GUIDANCE -> { vibrator()?.cancel();tone?.stopTone() }
             else -> if(timer==null) {stopForeground(STOP_FOREGROUND_REMOVE);stopSelf()}
         }
     }
-    private fun restore(active:ActiveSessionEntity) {
-        val saved=Codec.session(active.payload).copy(status=SessionStatus.PAUSED)
+    private suspend fun restore(active:ActiveSessionEntity):Boolean {
+        val decoded=runCatching {Codec.recoverableSession(active.payload)}.getOrNull()
+        if(decoded==null) {
+            dao.deleteActive();SessionState.state.value=null
+            SessionState.message.value="A sessão salva não pôde ser recuperada. Inicie um novo treino."
+            stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false
+        }
         programWeek=JSONObject(active.payload).optInt("week",-1)
-        timer=WorkoutTimer({SystemClock.elapsedRealtime()},saved)
+        timer=WorkoutTimer({SystemClock.elapsedRealtime()},decoded.copy(status=SessionStatus.PAUSED))
+        return true
     }
     private suspend fun checkpoint() {
         timer?.state()?.session?.let {
@@ -125,6 +141,7 @@ class WorkoutService : Service() {
             setReferenceCounted(false)
             acquire(initial.session.workout.durationMillis-initial.session.elapsedMillis+60_000)
         }
+        lastObserved=initial;lastObservedAt=SystemClock.elapsedRealtime()
         cue(initial.phase)
         ticker=scope.launch {
             var previous=initial
@@ -135,7 +152,7 @@ class WorkoutService : Service() {
                 delay(minOf(1000L, previous.remainingMillis % 1000L.let { if(it==0L)1000L else it }).coerceAtLeast(1))
                 val now=SystemClock.elapsedRealtime()
                 val current=timer?.state() ?: break
-                if(now-lastTick>1500L || current.phaseIndex>previous.phaseIndex+1) {
+                if(CueContinuity.interrupted(lastTick,now,previous.phaseIndex,current.phaseIndex)) {
                     timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
                     releaseWake();vibrator()?.cancel()
                     SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
@@ -147,6 +164,7 @@ class WorkoutService : Service() {
                 SessionState.state.value=current
                 if(current.phaseIndex!=previous.phaseIndex) {cue(current.phase);checkpoint();publish()}
                 previous=current;lastTick=now
+                lastObserved=current;lastObservedAt=now
             }
         }
     }
@@ -188,11 +206,11 @@ class WorkoutService : Service() {
     private fun notification(paused:Boolean):Notification {
         val content=PendingIntent.getActivity(this,0,Intent(this,MainActivity::class.java),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         fun action(a:String)=PendingIntent.getForegroundService(this,a.hashCode(),Intent(this,WorkoutService::class.java).setAction(a),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_pausa).setContentTitle("Pausa")
+        return NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Pausa")
             .setContentText(if(paused)"Sessão pausada" else "Seu ritmo continua")
             .setContentIntent(content).setOngoing(true).setSilent(true)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-            .setPublicVersion(NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_pausa).setContentTitle("Pausa").setContentText("Sessão em andamento").build())
+            .setPublicVersion(NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Pausa").setContentText("Sessão em andamento").build())
             .addAction(0,if(paused)"Retomar" else "Pausar",action(if(paused)RESUME else PAUSE))
             .addAction(0,"Encerrar",action(CANCEL)).build()
     }

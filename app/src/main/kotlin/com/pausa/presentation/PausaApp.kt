@@ -24,6 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.pausa.R
+import com.pausa.BuildConfig
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +55,12 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     AsyncImage(model="file:///android_asset/figma/$filename",contentDescription=description,
         modifier=modifier.size(size),contentScale=ContentScale.Fit,
         colorFilter=tint?.let {ColorFilter.tint(it)})
+}
+@Composable internal fun Brand() {
+    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        Icon(painterResource(R.drawable.ic_pausa),contentDescription=null,modifier=Modifier.size(32.dp),tint=MaterialTheme.colorScheme.primary)
+        Text("pausa.",style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.primary)
+    }
 }
 @Composable internal fun Title(text:String) {Text(text,style=MaterialTheme.typography.titleLarge)}
 @Composable internal fun Copy(text:String) {Text(text,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
@@ -104,7 +112,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     LaunchedEffect(reminderRequest,settings?.user?.onboardingDone) {
         if(reminderRequest>handledReminder && settings?.user?.onboardingDone==true) {
             handledReminder=reminderRequest
-            if(session==null)vm.start(settings!!.workout)
+            if(session==null || session?.session?.status==SessionStatus.COMPLETED) {
+                vm.dismissCompleted();vm.start(settings!!.workout)
+            }
             route="session"
         }
     }
@@ -134,7 +144,10 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                     "manual"->stringResource(R.string.manual_title)
                     else->"Configurações"
                 })},navigationIcon={TextButton(onClick={
-                    if(route=="session" && session!=null)confirmEnd=true else backToPrevious()
+                    if(route=="session" && session!=null)confirmEnd=true else {
+                        if(route=="finished")vm.dismissCompleted()
+                        backToPrevious()
+                    }
                 },modifier=Modifier.sizeIn(minWidth=48.dp,minHeight=48.dp)) {
                     Fig("23:855","imgIcone",24.dp,description="Voltar",tint=MaterialTheme.colorScheme.onSurface)
                 }},colors=TopAppBarDefaults.topAppBarColors(containerColor=MaterialTheme.colorScheme.background))},
@@ -211,7 +224,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     )
     Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement=Arrangement.spacedBy(24.dp)) {
-        Text("pausa.",style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.primary)
+        Brand()
         Box(Modifier.fillMaxWidth().height(280.dp),contentAlignment=Alignment.Center) {
             when(page) {
                 0 -> {
@@ -279,13 +292,14 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         }
         Panel(true) {
             Text("TREINO DE HOJE",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
-            val block=settings.workout.blocks.first()
+            val workout=settings.workout
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
-                    Text("${block.contractSeconds} s contração",color=MaterialTheme.colorScheme.onSurface)
-                    Text("${block.relaxSeconds} s relaxamento",color=MaterialTheme.colorScheme.onSurface)
-                    Text("${settings.workout.contractions} repetições"+
-                        if(settings.workout.sets>1)" · ${settings.workout.sets} séries" else "",
+                    workout.blocks.forEach { block ->
+                        Text("${block.contractSeconds} s contração · ${block.relaxSeconds} s relaxamento",color=MaterialTheme.colorScheme.onSurface)
+                        Text("${block.repetitions} repetições por série",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text("${workout.sets} ${if(workout.sets==1) "série" else "séries"} · ${workout.contractions} contrações no total",
                         style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(Modifier.width(82.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
@@ -438,11 +452,11 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             Fig(circleNode,"imgAmplitudeMaxima",280.dp)
             Fig(circleNode,"imgCirculoDeRitmo",144.dp,modifier=Modifier.scale(scale.value/.515f))
             Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
-                contentDescription=if(paused)"Treino pausado" else when(state.phase) {
+                contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
                     Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contraia"
                     Phase.RELAX->if(prefs.discreetScreen)"Fase dois" else "Relaxe"
                     Phase.REST->"Intervalo";Phase.FINISHED->"Concluído"
-                }
+                }) + ", ${state.secondsRemaining} segundos restantes"
             }) {
                 if(!prefs.discreetScreen)Text(if(paused)"PAUSADO" else when(state.phase) {
                     Phase.CONTRACT->"CONTRAIA";Phase.RELAX->"RELAXE";Phase.REST->"DESCANSE";Phase.FINISHED->"CONCLUÍDO"
@@ -481,6 +495,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Primary("INICIAR MODO BOLSO",start)
     }
 }
+@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun Finished(state:TimerState?,history:List<HistoryEntity>,feedback:(String,String)->Unit,done:()->Unit) {
     val s=state?.session
     ScrollContent {
@@ -494,7 +509,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Panel {Copy("Sequência atual");Title("${Progress.streak(dates,LocalDate.now())} dias")}
         Copy("Como foi? (opcional)")
         var selected by rememberSaveable {mutableStateOf<String?>(null)}
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             listOf("Muito fácil","Adequado","Difícil").forEach {value->
                 FilterChip(selected==value,{selected=value;if(s!=null)feedback(s.id,value)},label={Text(value)})
             }
@@ -592,7 +607,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Secondary("Treino padrão · ${settings.workout.name}",{navigate("programs")})
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
             Text("Sugerir progressão",Modifier.weight(1f))
-            Switch(u.progressionEnabled,{value->update {it.copy(progressionEnabled=value)}})
+            Switch(u.progressionEnabled,{value->update {it.copy(progressionEnabled=value)}},modifier=Modifier.semantics {contentDescription="Sugerir progressão"})
         }
         Title("Experiência")
         Panel {
@@ -605,7 +620,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             }
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 Text("Tela discreta",Modifier.weight(1f))
-                Switch(u.discreetScreen,{value->update {it.copy(discreetScreen=value)}})
+                Switch(u.discreetScreen,{value->update {it.copy(discreetScreen=value)}},modifier=Modifier.semantics {contentDescription="Tela discreta"})
             }
         }
         Secondary("Modo bolso",{navigate("pocket")})
@@ -624,6 +639,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Title("Sobre")
         Secondary(stringResource(R.string.manual_entry),{navigate("manual")})
         Secondary("Segurança",{info("Interrompa se houver dor ou desconforto persistente. Procure orientação profissional em caso de sintomas urinários, pélvicos ou pós-operatórios. O app não substitui avaliação médica ou fisioterapêutica. No carro, faça o treino apenas parado.")})
-        Copy("pausa. · 1.0.0\nCuidado discreto. No seu ritmo.")
+        Brand()
+        Copy("Versão ${BuildConfig.VERSION_NAME}\nCuidado discreto. No seu ritmo.")
     }
 }
