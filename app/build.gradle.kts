@@ -11,8 +11,8 @@ android {
         applicationId = "com.kegel_coach.myapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     val uploadStore = providers.environmentVariable("KEGEL_UPLOAD_STORE")
@@ -28,7 +28,7 @@ android {
         }
         buildTypes.getByName("release").signingConfig = signingConfigs.getByName("upload")
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
