@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-05",
+  "version_name": "1.0.2",
+  "version_code": 3,
+  "package": "com.kegel_coach.myapp",
+  "source_commit": "27627a7b41bf6734d411a9996ed353a94e764057",
+  "tests_total": 30,
+  "tests": [
+    {
+      "suite": "com.pausa.domain.CueContinuityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.domain.ManualDemoTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.domain.WorkoutTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.BrandTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.ManualTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.VisualTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.data.PersistenceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.reminders.ReminderTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "lint_errors": 0,
+  "lint_warnings": 0,
+  "jarsigner_verified": true,
+  "upload_certificate_sha256": "DF:51:B7:F3:87:55:54:8C:F4:12:CE:34:2C:2E:24:66:D1:16:C0:1B:02:0E:9C:74:92:B6:B1:C2:D9:D6:95:9F",
+  "aab_sha256": "355a662d23b5dc47f0f157f80ec4215bbc645ca4bfcb8347424ed67f083d5d66",
+  "aab_bytes": 19444157,
+  "merged_permissions": [
+    "android.permission.VIBRATE",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+    "com.kegel_coach.myapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "manual_assets": [
+    "base/assets/manual/01_prepare.png",
+    "base/assets/manual/02_contraia.png",
+    "base/assets/manual/03_mantenha.png",
+    "base/assets/manual/04_relaxe.png",
+    "base/assets/manual/05_rapida_contraia.png",
+    "base/assets/manual/06_rapida_relaxe.png"
+  ],
+  "instrumentation": "Compiled; not run locally",
+  "physical_device_testing": "Pending"
+}

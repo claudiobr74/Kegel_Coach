@@ -84,4 +84,6 @@ Diferenças funcionais deliberadas em relação ao protótipo:
 
 ## Validação
 
+A versão 1.0.2 incorpora a [nova marca vetorial](design/brand/README.md) e as correções da [auditoria completa](docs/audit/AUDITORIA_1.0.2.md).
+
 Consulte [VALIDATION.md](VALIDATION.md) para resultados, diferenças verificadas e testes de aparelho pendentes. O workflow Android compila, testa o domínio/persistência, executa lint e oferece testes instrumentados em API 35 e 36.

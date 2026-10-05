@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.2 — nova marca e auditoria
+
+- Logo vetorial minimalista, launcher adaptativo, ícone temático e recurso próprio para notificações.
+- Marca integrada ao onboarding e à seção Sobre; versão exibida deriva do build.
+- Continuidade da orientação verificada também ao pausar; recuperação rejeita checkpoints inválidos ou terminais.
+- Lembretes respeitam dias selecionados e limpam adiamentos antigos após edição.
+- Home apresenta corretamente os blocos, repetições por série e total de contrações.
+- Melhorias no TalkBack, identificação de switches, feedback com fonte grande e retorno após conclusão.
+- Auditoria e evidências em `docs/audit/`.
+
 ## 1.0.1 — manual realista e contador nativo
 
 - Substitui as ilustrações anteriores por seis estados fotorealistas 1200×1500, com personagem adulto sempre de frente e externamente imóvel.

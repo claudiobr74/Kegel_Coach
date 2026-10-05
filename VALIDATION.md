@@ -1,5 +1,14 @@
 # Validação · 5 de outubro de 2026
 
+## Atualização 1.0.2 — marca e auditoria
+
+Compilação recuperada aprovada: 124 tarefas, BUILD SUCCESSFUL. **30/30 testes aprovados**, sem erros, falhas ou testes ignorados. Lint release: **zero erros e zero warnings**. Instrumentação compilada; execução em aparelho ainda pendente. AAB **1.0.2/code 3**, 19.444.157 bytes, assinado com a mesma chave de upload, verificado por jarsigner e com ZIP íntegro. Os seis PNGs do manual coincidem byte a byte com os recursos do código.
+
+SHA-256: `355a662d23b5dc47f0f157f80ec4215bbc645ca4bfcb8347424ed67f083d5d66`.
+
+Nova marca vetorial no launcher adaptativo/temático, onboarding e Sobre. Correções de continuidade ao pausar, checkpoints inválidos, lembretes, resumo dos treinos e acessibilidade. A [auditoria](docs/audit/AUDITORIA_1.0.2.md) detalha achados, escopo, limites e pendências. [Resultados](docs/audit/RESULTADOS_1.0.2.json), [contraste](docs/audit/CONTRASTE_1.0.2.json) e [consulta OSV](docs/audit/DEPENDENCIAS_OSV_1.0.2.json) preservam evidência estruturada.
+
+
 ## Atualização 1.0.1 — manual realista
 
 Build final offline a partir de pasta de build nova: 59 tarefas, BUILD SUCCESSFUL. Verificações anteriores do mesmo código: 22/22 testes aprovados e compilação instrumentada aprovada. Lint release final sem erros nem warnings. AAB 1.0.1 (versionCode 2) assinado e verificado com jarsigner; ZIP íntegro e somente seis PNGs locais 1200×1500. SHA-256: `d9870f6c171b1dfe89d3e763a8c13af833feedc43529597c5cc3d8b955a79e95`.
@@ -18,7 +27,7 @@ Persistência: round-trip de treino misto e checkpoint; conclusão transacional/
 
 Interface: navegação onboarding → Home → personalizado; renderização nativa em claro/escuro. O teste instrumentado cobre onboarding → treino rápido → pausa.
 
-## Evidência
+## Evidência da versão inicial 1.0.0
 
 Build final de release concluído com sucesso em 5/10/2026:
 
@@ -49,7 +58,7 @@ Os testes compactos usam largura 320 dp, altura 568 dp e fonte 1,6×. Validam o 
 
 ## Verificações em aparelho
 
-O ambiente local não oferece aceleração KVM e o emulador API 35 exige mais espaço de partição do que o disponível. Portanto, o teste instrumentado local de tela bloqueada **não foi executado**. O workflow de CI oferece emuladores API 35 e 36; a continuidade háptica também deve ser avaliada em aparelho real.
+O ambiente local não oferece aceleração KVM. Portanto, o teste instrumentado local de tela bloqueada **não foi executado**. O workflow de CI oferece emuladores API 35 e 36; a continuidade háptica também deve ser avaliada em aparelho real.
 
 | Cenário | Resultado esperado |
 | --- | --- |
@@ -61,7 +70,7 @@ O ambiente local não oferece aceleração KVM e o emulador API 35 exige mais es
 | Rotacionar/alterar configuração | Sessão e tempo continuam no serviço |
 | Revogar notificações | App explica permissão; treino de tela continua disponível |
 | Alterar fuso/hora e reiniciar aparelho | Horários locais de lembretes são reagendados |
-| Manual: reproduzir/pausar e colocar em background | WebP animado em API 28+, GIF em API 26–27; pausa em background e com redução de movimento |
+| Manual: reproduzir/pausar e colocar em background | Frames PNG com fases/contador controlados pelo Android; pausa em background e com redução de movimento |
 | Manual: rotação/recomposição | Seção aberta e opção de reprodução preservadas |
 | TalkBack/fonte ampliada/animações desativadas | Controles compreensíveis, sem recorte e com animações reduzidas |
 

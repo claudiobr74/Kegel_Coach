@@ -1,0 +1,42 @@
+[
+  {
+    "foreground": "#172C2D",
+    "background": "#FFFFFF",
+    "ratio": 14.64
+  },
+  {
+    "foreground": "#526667",
+    "background": "#FFFFFF",
+    "ratio": 6.08
+  },
+  {
+    "foreground": "#165E59",
+    "background": "#D7EEEA",
+    "ratio": 6.23
+  },
+  {
+    "foreground": "#FFFFFF",
+    "background": "#165E59",
+    "ratio": 7.56
+  },
+  {
+    "foreground": "#E2EEEB",
+    "background": "#1B2B31",
+    "ratio": 12.3
+  },
+  {
+    "foreground": "#ABC0BF",
+    "background": "#1B2B31",
+    "ratio": 7.67
+  },
+  {
+    "foreground": "#93D4C9",
+    "background": "#234B4B",
+    "ratio": 5.74
+  },
+  {
+    "foreground": "#093C38",
+    "background": "#93D4C9",
+    "ratio": 7.29
+  }
+]
