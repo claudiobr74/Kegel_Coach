@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kegel_coach.myapp",
+      "sha256_cert_fingerprints": [
+        "D4:5A:C3:1F:50:4E:7E:94:72:A2:3C:53:28:19:7F:7D:89:30:43:6B:EB:80:41:92:86:6D:E6:D0:01:A3:B3:03"
+      ]
+    }
+  }
+]

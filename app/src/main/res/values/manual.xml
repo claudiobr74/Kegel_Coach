@@ -1,0 +1,94 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <string name="manual_title">Manual de execução</string>
+  <string name="manual_entry">Como fazer os exercícios</string>
+  <string name="manual_intro">Aprenda a técnica no seu ritmo. As orientações são educativas e não substituem avaliação individual.</string>
+  <string name="manual_identify">1. Encontre os músculos certos</string>
+  <string name="manual_position">2. Posição</string>
+  <string name="manual_slow">3. Contração lenta</string>
+  <string name="manual_quick">4. Contrações rápidas</string>
+  <string name="manual_check">5. Como saber se está correto</string>
+  <string name="manual_errors">6. Erros comuns</string>
+  <string name="manual_safety">7. Quando procurar orientação</string>
+  <string name="manual_urine_note">Não use a interrupção do jato urinário como exercício rotineiro. Ela pode servir apenas como referência inicial para algumas pessoas.</string>
+  <string name="manual_quality">A qualidade da contração e o relaxamento completo são mais importantes que a velocidade ou a quantidade.</string>
+  <string name="manual_metaphor">O corpo permanece imóvel. O indicador de elevação é uma metáfora didática: não representa um deslocamento externo mensurável.</string>
+  <string name="manual_no_detection">Este app não possui sensores e não consegue detectar se a contração está correta.</string>
+  <string name="manual_individual">Protocolos terapêuticos devem ser individualizados quando houver sintomas, gestação, pós-parto ou pós-operatório.</string>
+  <string name="manual_disclaimer">Este conteúdo é educativo e não substitui avaliação médica ou fisioterapêutica individual.</string>
+  <string name="manual_references">Referências</string>
+  <string name="manual_open">Ver</string>
+  <string name="manual_close">Fechar</string>
+  <string name="manual_expanded">Expandida</string>
+  <string name="manual_collapsed">Recolhida</string>
+  <string name="manual_play">Reproduzir demonstração</string>
+  <string name="manual_pause">Pausar demonstração</string>
+  <string name="manual_reduced_motion">Animações reduzidas pelo sistema. A demonstração permanece em uma imagem estática.</string>
+  <string name="manual_animation_slow_desc">Demonstração de contração lenta do assoalho pélvico. O corpo permanece imóvel enquanto um indicador visual representa fechamento e elevação interna. Contraia por 3 segundos e relaxe completamente por 6 segundos.</string>
+  <string name="manual_animation_quick_desc">Demonstração de contrações rápidas do assoalho pélvico. O corpo permanece imóvel. Contraia por aproximadamente 1 segundo e relaxe completamente antes de repetir.</string>
+  <string name="manual_load_error">Não foi possível abrir a demonstração. As instruções abaixo continuam disponíveis.</string>
+  <string name="manual_onboarding_entry">Ver manual de execução</string>
+  <string-array name="manual_identify_steps">
+    <item>Imagine os músculos usados para segurar gases e, ao mesmo tempo, evitar a saída de urina. A sensação correta é de fechar e elevar suavemente por dentro, não de empurrar para baixo.</item>
+  </string-array>
+  <string-array name="manual_position_steps">
+    <item>Para aprender, comece deitado(a) ou sentado(a). Depois, progrida para a posição em pé.</item>
+    <item>Sentado(a), mantenha os pés totalmente apoiados e a coluna confortável.</item>
+    <item>Relaxe os ombros, o abdome, os glúteos e as coxas. Respire normalmente.</item>
+  </string-array>
+  <string-array name="manual_slow_steps">
+    <item>1. Respire normalmente.</item>
+    <item>2. Feche e eleve suavemente o assoalho pélvico, como se segurasse gases e urina.</item>
+    <item>3. No treino inicial, mantenha por 3 segundos e continue respirando.</item>
+    <item>4. Não mova a pelve nem aperte glúteos, coxas ou abdome.</item>
+    <item>5. Relaxe completamente por 6 segundos.</item>
+    <item>6. Repita 8–10 vezes, conforme tolerado e o treino proposto.</item>
+  </string-array>
+  <string-array name="manual_quick_steps">
+    <item>Contraia por aproximadamente 1 segundo.</item>
+    <item>Relaxe completamente antes de repetir.</item>
+    <item>Repita até 10 vezes, sem perder a técnica.</item>
+  </string-array>
+  <string-array name="manual_check_steps">
+    <item>✓ Sensação de fechamento ao redor da uretra/ânus.</item>
+    <item>✓ Leve elevação interna.</item>
+    <item>✓ Respiração normal.</item>
+    <item>✓ Glúteos, coxas e abdome relaxados.</item>
+    <item>✓ Relaxamento completo após cada contração.</item>
+  </string-array>
+  <string-array name="manual_error_steps">
+    <item>Prender a respiração.</item>
+    <item>Empurrar para baixo.</item>
+    <item>Apertar glúteos ou pernas.</item>
+    <item>Endurecer excessivamente o abdome.</item>
+    <item>Fazer repetições sem relaxar.</item>
+    <item>Aumentar rapidamente o volume ou a duração.</item>
+    <item>Treinar repetidamente interrompendo o jato urinário.</item>
+  </string-array>
+  <string-array name="manual_safety_steps">
+    <item>Interrompa e procure avaliação se houver dor durante ou após o exercício.</item>
+    <item>Piora persistente de sintomas pélvicos.</item>
+    <item>Dificuldade importante para relaxar.</item>
+    <item>Dificuldade para urinar ou evacuar.</item>
+    <item>Dúvida persistente sobre a musculatura correta.</item>
+    <item>Pós-operatório com protocolo específico.</item>
+    <item>Sintomas urinários, intestinais ou pélvicos relevantes.</item>
+  </string-array>
+  <!-- DOI and URL hyphens are identifier characters, not typographic dashes. -->
+  <string-array name="manual_reference_items" tools:ignore="TypographyDashes">
+    <item>NIDDK / NIH. Kegel Exercises.\nhttps://www.niddk.nih.gov/health-information/urologic-diseases/kegel-exercises</item>
+    <item>Bø K, Frawley HC, Haylen BT, et al. IUGA/ICS joint report on conservative and nonpharmacological management of female pelvic floor dysfunction. Int Urogynecol J. 2017;28:191–213.\nDOI: 10.1007/s00192-016-3123-4</item>
+    <item>Dumoulin C, Cacciari LP, Hay-Smith EJC. Pelvic floor muscle training versus no treatment, or inactive control treatments, for urinary incontinence in women. Cochrane. 2018;10:CD005654.\nDOI: 10.1002/14651858.CD005654.pub4</item>
+    <item>NICE. Urinary incontinence and pelvic organ prolapse in women: management. NG123.\nhttps://www.nice.org.uk/guidance/ng123</item>
+    <item>NICE. Pelvic floor dysfunction: prevention and non-surgical management. NG210.\nhttps://www.nice.org.uk/guidance/ng210</item>
+    <item>Royal Free London NHS Foundation Trust. Pelvic floor exercises for male patients.\nhttps://www.royalfree.nhs.uk/patients-and-visitors/patient-information-leaflets/pelvic-floor-exercises-male-patients</item>
+  </string-array>
+  <string name="manual_asset_loading">Carregando demonstração</string>
+  <string name="manual_asset_ready">Demonstração disponível</string>
+  <string name="manual_phase_prepare">PREPARE</string>
+  <string name="manual_phase_contract">CONTRAIA</string>
+  <string name="manual_phase_relax">RELAXE</string>
+  <string name="manual_cue_prepare">Relaxe abdome, glúteos e coxas.</string>
+  <string name="manual_cue_contract">Feche e eleve suavemente por dentro.</string>
+  <string name="manual_cue_hold">Mantenha a contração e continue respirando.</string>
+  <string name="manual_cue_relax">Solte completamente, sem empurrar para baixo.</string>
+</resources>

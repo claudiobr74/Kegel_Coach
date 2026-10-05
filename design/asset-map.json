@@ -1,0 +1,48 @@
+{
+  "23:770": {
+    "imgIcone": "node_23_779.svg",
+    "imgIcone1": "node_23_821.svg",
+    "imgIcone2": "node_23_825.svg",
+    "imgIcone3": "node_23_829.svg",
+    "imgDestino": "node_23_834.svg",
+    "imgDestino1": "node_23_837.svg",
+    "imgDestino2": "node_23_840.svg",
+    "imgDestino3": "node_23_843.svg"
+  },
+  "23:855": {
+    "imgIcone": "node_23_862.svg",
+    "imgAmplitudeMaxima": "node_23_870.svg",
+    "imgCirculoDeRitmo": "node_23_871.svg"
+  },
+  "23:648": {
+    "imgCampoDeRespiro": "node_23_656.svg",
+    "imgExpansao": "node_23_657.svg",
+    "imgRitmo": "node_23_658.svg",
+    "imgCentro": "node_23_659.svg"
+  },
+  "23:675": {
+    "imgCampoDeRespiro": "node_23_683.svg",
+    "imgCirculo": "node_23_685.svg"
+  },
+  "23:703": {
+    "imgCampoDeRespiro": "node_23_711.svg",
+    "imgIcone": "node_23_713.svg"
+  },
+  "23:730": {
+    "imgCampoDeRespiro": "node_23_738.svg",
+    "imgIcone": "node_23_740.svg",
+    "imgAtivo": "node_23_744.svg"
+  },
+  "23:2344": {
+    "imgAmplitudeMaxima": "node_23_2359.svg",
+    "imgCirculoDeRitmo": "node_23_2360.svg"
+  },
+  "23:1181": {
+    "imgIcone1": "node_23_1198.svg",
+    "imgIcone2": "node_23_1202.svg"
+  },
+  "23:2156": {
+    "imgRespiro": "node_23_2168.svg",
+    "imgCentro": "node_23_2169.svg"
+  }
+}

@@ -1,0 +1,7 @@
+<resources>
+  <string name="reminder_title">Hora de uma pausa rápida</string>
+  <string name="reminder_start">Iniciar</string>
+  <string name="reminder_snooze_10">Adiar 10 min</string>
+  <string name="reminder_snooze_30">Adiar 30 min</string>
+  <string name="reminder_snooze_60">Adiar 1 hora</string>
+</resources>
