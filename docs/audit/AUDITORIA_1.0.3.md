@@ -4,7 +4,7 @@ A implementação anterior emitia vibrações sem atributos de uso. O Android re
 
 Ao trocar o modo de orientação durante uma sessão ativa, o serviço interrompe a orientação anterior e emite o sinal da fase atual. Alterações em preferências sem mudança de orientação não cancelam uma vibração. Sessões pausadas não emitem esse sinal.
 
-Arquivos principais: HapticGuidance.kt, WorkoutService.kt, PausaApp.kt, HapticGuidanceTest.kt, BrandTest.kt e app/build.gradle.kts. O layout e as imagens do manual foram preservados.
+Arquivos principais: HapticGuidance.kt, WorkoutService.kt, PausaApp.kt, HapticGuidanceTest.kt, BrandTest.kt e app/build.gradle.kts. As imagens do manual foram preservadas. A nova logo enviada pelo usuário foi aplicada em Boas-vindas, Sobre e nos ícones adaptativo, monocromático e de notificação. O PNG original foi preservado, e os ícones usam o contorno vetorizado do símbolo aprovado. Os espaços e as cores existentes foram consultados no Figma (Boas-vindas 23:648).
 
 Cinco testes de regressão verificam atributos de alarme para as quatro fases e para a demonstração, padrões sem repetição automática, cancelamento, ausência de motor vibratório e política de mudança de orientação. Os testes Android usam Robolectric com API 35. A compatibilidade API 26–32 é compilada, mas não foi executada em dispositivo dessas versões.
 

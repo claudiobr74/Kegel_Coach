@@ -3,7 +3,8 @@
   "version_name": "1.0.3",
   "version_code": 4,
   "package": "com.kegel_coach.myapp",
-  "source_commit": "fd7089cda527b55631eec94fdf5955967b1471a4",
+  "source_worktree": "Validated vibration fix and approved logo; changes committed after build validation",
+  "source_base_commit": "fd7089cda527b55631eec94fdf5955967b1471a4",
   "tests_total": 35,
   "tests": [
     {
@@ -74,8 +75,8 @@
   "lint_warnings": 0,
   "jarsigner_verified": true,
   "upload_certificate_sha256": "DF:51:B7:F3:87:55:54:8C:F4:12:CE:34:2C:2E:24:66:D1:16:C0:1B:02:0E:9C:74:92:B6:B1:C2:D9:D6:95:9F",
-  "aab_sha256": "b07a5572acf75d150c427547552af4b3c82e79432a281d8783633940e6c78ac1",
-  "aab_bytes": 19444103,
+  "aab_sha256": "39fa046acea5d9eea6eadd257ff548c2f819d50edd68a7ca7dfb1f727b3a1e70",
+  "aab_bytes": 19634080,
   "merged_permissions": [
     "android.permission.VIBRATE",
     "android.permission.WAKE_LOCK",

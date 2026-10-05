@@ -57,10 +57,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         colorFilter=tint?.let {ColorFilter.tint(it)})
 }
 @Composable internal fun Brand() {
-    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-        Icon(painterResource(R.drawable.ic_pausa),contentDescription=null,modifier=Modifier.size(32.dp),tint=MaterialTheme.colorScheme.primary)
-        Text("pausa.",style=MaterialTheme.typography.headlineMedium,color=MaterialTheme.colorScheme.primary)
-    }
+    Image(painterResource(R.drawable.kegel_coach_logo), contentDescription="Kegel Coach",
+        modifier=Modifier.width(208.dp).aspectRatio(1.5f), contentScale=ContentScale.Fit,
+        colorFilter=ColorFilter.tint(MaterialTheme.colorScheme.primary))
 }
 @Composable internal fun Title(text:String) {Text(text,style=MaterialTheme.typography.titleLarge)}
 @Composable internal fun Copy(text:String) {Text(text,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
