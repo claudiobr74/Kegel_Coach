@@ -15,8 +15,8 @@ class BrandTest {
     @Test fun installedLauncherUsesAdaptiveIconAndCorrectVersion() {
         val context=ApplicationProvider.getApplicationContext<Context>()
         assertTrue(context.getDrawable(R.mipmap.ic_launcher) is AdaptiveIconDrawable)
-        assertEquals("1.0.2",BuildConfig.VERSION_NAME)
-        assertEquals(3,BuildConfig.VERSION_CODE)
+        assertEquals("1.0.3",BuildConfig.VERSION_NAME)
+        assertEquals(4,BuildConfig.VERSION_CODE)
         assertNotNull(context.getDrawable(R.drawable.ic_notification))
     }
 }

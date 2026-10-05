@@ -185,9 +185,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                             {confirmEnd=true},{vm.updateUser {it.copy(discreetScreen=!it.discreetScreen)}},
                             {vm.updateUser {it.copy(guidance=Guidance.VIBRATION,discreetScreen=true)}})
                         "pocket"->PocketScreen({start(current.workout,true)},{
-                            val v=if(Build.VERSION.SDK_INT>=31)context.getSystemService(VibratorManager::class.java).defaultVibrator
-                                else context.getSystemService(Vibrator::class.java)
-                            v.vibrate(VibrationEffect.createWaveform(longArrayOf(0,150,1000,150,120,150,1000,600,1000,150,120,150,120,600),-1))
+                            HapticGuidance(context).preview()
                         })
                         "finished"->Finished(session,history,{id,value->vm.feedback(id,value)},{vm.dismissCompleted();route="home"})
                         "progress"->ProgressScreen(history)

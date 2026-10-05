@@ -35,6 +35,7 @@ class WorkoutService : Service() {
     private var ticker: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var dao: PausaDao
+    private val haptics by lazy { HapticGuidance(this) }
     private var settings = Settings()
     private var programWeek = -1
     private var lastCheckpoint: WorkoutSession? = null
@@ -68,6 +69,7 @@ class WorkoutService : Service() {
     override fun onBind(intent:Intent?):IBinder?=null
 
     private suspend fun handle(intent:Intent) {
+        val previousGuidance = settings.user.guidance
         settings = PreferencesRepository(this).settings.first()
         when(intent.action) {
             START -> {
@@ -101,16 +103,23 @@ class WorkoutService : Service() {
                     timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
                     SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
                 } else timer?.pause()
-                releaseWake();vibrator()?.cancel();tone?.stopTone()
+                releaseWake();haptics.cancel();tone?.stopTone()
                 val state=timer?.state()
                 if(state?.session?.status==SessionStatus.COMPLETED)finish(state) else {checkpoint();publish()}
             }
             CANCEL -> {
-                ticker?.cancel();timer?.cancel();releaseWake();vibrator()?.cancel();tone?.stopTone()
+                ticker?.cancel();timer?.cancel();releaseWake();haptics.cancel();tone?.stopTone()
                 dao.deleteActive();SessionState.state.value=null
                 stopForeground(STOP_FOREGROUND_REMOVE);stopSelf()
             }
-            GUIDANCE -> { vibrator()?.cancel();tone?.stopTone() }
+            GUIDANCE -> {
+                if (previousGuidance != settings.user.guidance) {
+                    haptics.cancel(); tone?.stopTone()
+                    val current = timer?.state()
+                    if (HapticGuidance.changedDuringRunning(previousGuidance, settings.user.guidance, current?.session?.status))
+                        current?.let { cue(it.phase) }
+                }
+            }
             else -> if(timer==null) {stopForeground(STOP_FOREGROUND_REMOVE);stopSelf()}
         }
     }
@@ -154,7 +163,7 @@ class WorkoutService : Service() {
                 val current=timer?.state() ?: break
                 if(CueContinuity.interrupted(lastTick,now,previous.phaseIndex,current.phaseIndex)) {
                     timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
-                    releaseWake();vibrator()?.cancel()
+                    releaseWake();haptics.cancel()
                     SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
                     checkpoint();publish();break
                 }
@@ -181,18 +190,8 @@ class WorkoutService : Service() {
         SessionState.state.value=state
         getSystemService(NotificationManager::class.java).notify(NOTIFICATION,notification(state?.session?.status==SessionStatus.PAUSED))
     }
-    private fun vibrator():Vibrator? = if(Build.VERSION.SDK_INT>=31)
-        getSystemService(VibratorManager::class.java)?.defaultVibrator else getSystemService(Vibrator::class.java)
     private fun cue(phase:Phase) {
-        if(settings.user.guidance in listOf(Guidance.VIBRATION,Guidance.BOTH)) {
-            val pattern=when(phase) {
-                Phase.CONTRACT->longArrayOf(0,150)
-                Phase.RELAX->longArrayOf(0,150,120,150)
-                Phase.REST->longArrayOf(0,600)
-                Phase.FINISHED->longArrayOf(0,150,120,150,120,600)
-            }
-            vibrator()?.takeIf { it.hasVibrator() }?.vibrate(VibrationEffect.createWaveform(pattern,-1))
-        }
+        if(settings.user.guidance in listOf(Guidance.VIBRATION,Guidance.BOTH)) haptics.play(phase)
         if(settings.user.guidance==Guidance.SOUND) {
             if(tone==null) tone=ToneGenerator(AudioManager.STREAM_MUSIC,35)
             tone?.startTone(when(phase) {
@@ -224,7 +223,7 @@ class WorkoutService : Service() {
             }
         }
         releaseWake();scope.cancel();commands.close()
-        if(SessionState.state.value?.session?.status!=SessionStatus.COMPLETED)vibrator()?.cancel()
+        if(SessionState.state.value?.session?.status!=SessionStatus.COMPLETED)haptics.cancel()
         tone?.let {
             if(SessionState.state.value?.session?.status==SessionStatus.COMPLETED)
                 Handler(Looper.getMainLooper()).postDelayed({it.release()},650)
