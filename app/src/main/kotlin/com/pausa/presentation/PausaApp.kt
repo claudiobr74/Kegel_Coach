@@ -545,8 +545,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Column(Modifier.fillMaxSize().padding(horizontal=20.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text("Série ${state.set} de ${state.session.workout.sets} · Repetição ${state.repetition} de ${state.session.workout.blocks.sumOf {it.repetitions}}",
                 Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium)
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-                horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center) {
+            Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center) {
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.size(dialSize),contentAlignment=Alignment.Center) {
                     SecondSweepRing(state,paused,reduceMotion,Modifier.fillMaxSize())
                     Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
@@ -573,6 +574,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 },Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium,
                     color=MaterialTheme.colorScheme.onSurfaceVariant)
                 if(message!=null)Copy(message)
+            }
             }
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("Treino completo",style=MaterialTheme.typography.bodySmall)

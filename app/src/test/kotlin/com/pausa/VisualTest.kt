@@ -90,6 +90,11 @@ class VisualTest {
         compose.onNodeWithText("Continuar treino").performClick()
         compose.onNodeWithContentDescription("Contraia, 3 segundos restantes").assertExists()
         capture("session-contract-dark")
+        now=500L
+        val half=timer.state()
+        SessionState.state.value=half.copy(session=half.session.copy(status=SessionStatus.PAUSED))
+        compose.onNodeWithContentDescription("Treino pausado, 3 segundos restantes").assertExists()
+        capture("session-counter-half-dark")
         now=3000L
         SessionState.state.value=timer.state()
         compose.onNodeWithContentDescription("Relaxe, 6 segundos restantes").assertExists()

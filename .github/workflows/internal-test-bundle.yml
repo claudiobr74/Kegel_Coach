@@ -1,10 +1,14 @@
 name: Signed internal test bundle
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/internal-test-bundle.yml']
 permissions:
   contents: read
 jobs:
   bundle:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-aab]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,6 +17,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v4
       - name: Validate source
         run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintRelease
@@ -36,6 +43,7 @@ jobs:
           KEGEL_UPLOAD_KEY_PASSWORD: ${{ secrets.KEGEL_UPLOAD_KEY_PASSWORD }}
         run: |
           ./gradlew :app:bundleRelease
+          sha256sum app/build/outputs/bundle/release/app-release.aab
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab
       - uses: actions/upload-artifact@v4
         with:
