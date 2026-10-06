@@ -14,7 +14,7 @@ class MainActivity:ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if(intent.action=="reminder-start")reminderRequest++
-        setContent {val vm:AppViewModel=viewModel();PausaApp(vm,reminderRequest)}
+        setContent {val vm:AppViewModel=viewModel();PausaApp(vm,reminderRequest,skipStartup=savedInstanceState!=null)}
     }
     override fun onNewIntent(intent:Intent) {super.onNewIntent(intent);setIntent(intent);if(intent.action=="reminder-start")reminderRequest++}
 }

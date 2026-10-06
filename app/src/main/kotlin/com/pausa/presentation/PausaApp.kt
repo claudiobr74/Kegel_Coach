@@ -113,9 +113,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun PausaApp(vm:AppViewModel,reminderRequest:Int=0) {
+@Composable fun PausaApp(vm:AppViewModel,reminderRequest:Int=0,skipStartup:Boolean=false) {
     val settings by vm.settings.collectAsStateWithLifecycle()
-    var startupFinished by rememberSaveable {mutableStateOf(false)}
+    var startupFinished by rememberSaveable {mutableStateOf(skipStartup)}
     val history by vm.history.collectAsStateWithLifecycle()
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
