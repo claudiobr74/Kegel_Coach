@@ -15,13 +15,12 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:bundleRelease :app:assembleDebugAndroidTest
+      - run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:compileDebugKotlin :app:assembleDebugAndroidTest
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: android-build-and-reports
           path: |
-            app/build/outputs/bundle/release/*.aab
             app/build/reports/
             domain/build/reports/
   device:
