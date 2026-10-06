@@ -79,17 +79,17 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         colorFilter=tint?.let {ColorFilter.tint(it)})
 }
 @Composable internal fun Brand() {
-    Image(painterResource(R.drawable.kegel_coach_logo), contentDescription="Kegel Coach",
-        modifier=Modifier.width(208.dp).aspectRatio(1.5f), contentScale=ContentScale.Fit,
-        colorFilter=ColorFilter.tint(MaterialTheme.colorScheme.primary))
+    Column(Modifier.widthIn(max=280.dp).fillMaxWidth(),horizontalAlignment=Alignment.CenterHorizontally,
+        verticalArrangement=Arrangement.spacedBy(18.dp)) {
+        BrandSymbol(Modifier.size(128.dp))
+        BrandName()
+    }
 }
 @Composable internal fun HeaderBrand() {
     Row(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription="Kegel Coach" },
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-        Icon(painterResource(R.drawable.ic_brand_symbol),contentDescription=null,
-            modifier=Modifier.size(40.dp),tint=MaterialTheme.colorScheme.primary)
-        Text("Kegel Coach",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold,
-            color=MaterialTheme.colorScheme.primary,modifier=Modifier.weight(1f))
+        BrandSymbol(Modifier.size(40.dp))
+        BrandName(Modifier.weight(1f),compact=true)
     }
 }
 @Composable internal fun Title(text:String) {Text(text,style=MaterialTheme.typography.titleLarge)}
@@ -115,10 +115,14 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun PausaApp(vm:AppViewModel,reminderRequest:Int=0) {
     val settings by vm.settings.collectAsStateWithLifecycle()
+    var startupFinished by rememberSaveable {mutableStateOf(false)}
     val history by vm.history.collectAsStateWithLifecycle()
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
+    LaunchedEffect(reminderRequest,session) {
+        if(reminderRequest>0 || session!=null)startupFinished=true
+    }
     var route by rememberSaveable {mutableStateOf("home")}
     var manualReturn by rememberSaveable {mutableStateOf("settings")}
     var onboardingPage by rememberSaveable {mutableIntStateOf(0)}
@@ -156,6 +160,10 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     PausaTheme(settings?.user?.theme ?: AppTheme.SYSTEM) {
         Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
             val current=settings
+            if(!startupFinished && reminderRequest==0 && session==null) {
+                StartupScreen(ready=current!=null,onFinished={startupFinished=true})
+                return@Surface
+            }
             if(current==null) {Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){CircularProgressIndicator()};return@Surface}
             if(!current.user.onboardingDone && route!="manual") {
                 Onboarding(onboardingPage,{onboardingPage=it},

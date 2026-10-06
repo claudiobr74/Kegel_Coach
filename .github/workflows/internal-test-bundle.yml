@@ -1,9 +1,9 @@
 name: Internal test bundle
-# Optimized release checks scrolling onboarding and phase labels.
+# Release 1.1.2 adds the approved monogram and native startup.
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feat/monogram-startup]
     paths: ['.github/workflows/internal-test-bundle.yml']
 permissions:
   contents: read
