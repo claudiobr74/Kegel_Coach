@@ -30,7 +30,7 @@ def tap(label):
     assert adb("shell", "pidof", PACKAGE).strip(), f"App exited after {label}"
 
 adb("logcat", "-c")
-adb("shell", "monkey", "-p", PACKAGE, "-c", "android.intent.category.LAUNCHER", "1")
+adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
 time.sleep(5)
 for label in ["Continuar", "Continuar", "Continuar", "COMEÇAR"]:
     tap(label)

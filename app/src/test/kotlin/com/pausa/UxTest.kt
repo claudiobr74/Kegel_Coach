@@ -3,6 +3,7 @@ package com.pausa
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -71,4 +72,20 @@ class UxTest {
         compose.onNodeWithText("Opções").performClick()
         compose.onNodeWithText("Modo bolso").assertExists()
     }
+    @Test fun discreetWorkoutStillShowsContractAndRelaxBesideCountdown() {
+        val session=WorkoutSession("phase-labels",WorkoutPreset.beginner,0,0,SessionStatus.RUNNING)
+        val state=mutableStateOf(WorkoutTimer({0L},session).state())
+        compose.setContent {PausaTheme(AppTheme.LIGHT) {
+            Surface(Modifier.fillMaxSize()) {
+                SessionScreen(state.value,UserPreferences(discreetScreen=true),null,{},{},{},{})
+            }
+        }}
+        compose.onNodeWithText("Contrair",useUnmergedTree=true).assertIsDisplayed()
+        compose.runOnIdle {
+            state.value=WorkoutTimer({0L},session.copy(elapsedMillis=3000L)).state()
+        }
+        compose.onNodeWithText("Relaxar",useUnmergedTree=true).assertIsDisplayed()
+        compose.onNodeWithText("Contrair",useUnmergedTree=true).assertDoesNotExist()
+    }
+
 }
