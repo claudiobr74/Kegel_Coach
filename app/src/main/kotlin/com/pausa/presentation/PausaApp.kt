@@ -445,6 +445,40 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
 }
 
+/** One clockwise sweep per second; the service remains the source of timer values. */
+@Composable private fun SecondSweepRing(state:TimerState,paused:Boolean,reduceMotion:Boolean,modifier:Modifier=Modifier) {
+    val elapsed=remember(state.session.id,state.phaseIndex) {
+        Animatable((state.phaseDurationMillis-state.remainingMillis).coerceAtLeast(0L).toFloat())
+    }
+    LaunchedEffect(state.session.id,state.phaseIndex,state.remainingMillis,paused,reduceMotion) {
+        val exact=(state.phaseDurationMillis-state.remainingMillis).coerceAtLeast(0L).toFloat()
+        elapsed.snapTo(exact)
+        if(!paused && !reduceMotion && state.phase!=Phase.FINISHED && state.remainingMillis>0L) {
+            // Resynchronize at every service tick, and stop exactly on a phase boundary.
+            val untilTick=minOf(1000L,state.remainingMillis % 1000L.let {if(it==0L)1000L else it})
+            elapsed.animateTo(exact+untilTick.toFloat(),tween(untilTick.toInt(),easing=LinearEasing))
+        }
+    }
+    val color=MaterialTheme.colorScheme.primary
+    Canvas(modifier) {
+        val progress=if(reduceMotion || state.phase==Phase.FINISHED)1f else (elapsed.value % 1000f)/1000f
+        val diameter=size.minDimension*.80f
+        val inset=androidx.compose.ui.geometry.Offset((size.width-diameter)/2f,(size.height-diameter)/2f)
+        val arcSize=androidx.compose.ui.geometry.Size(diameter,diameter)
+        val sweep=progress*360f
+        val stroke=androidx.compose.ui.graphics.drawscope.Stroke(width=size.minDimension*.06f,cap=StrokeCap.Butt)
+        // Fade the moving tip like the reference, leaving the completed arc opaque.
+        var angle=0f
+        while(angle<sweep) {
+            val segment=minOf(2f,sweep-angle)
+            drawArc(color=color.copy(alpha=((sweep-angle)/43f).coerceIn(0f,1f)),
+                startAngle=-90f+angle,sweepAngle=segment,useCenter=false,
+                topLeft=inset,size=arcSize,style=stroke)
+            angle+=segment
+        }
+    }
+}
+
 @Composable private fun SessionScreen(state:TimerState?,prefs:UserPreferences,message:String?,pause:()->Unit,
     end:()->Unit,discreet:()->Unit,pocket:()->Unit) {
     if(state==null) {
@@ -456,26 +490,12 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     val paused=state.session.status==SessionStatus.PAUSED
     val context=LocalContext.current
     val reduceMotion=AndroidSettings.Global.getFloat(context.contentResolver,AndroidSettings.Global.ANIMATOR_DURATION_SCALE,1f)==0f
-    val scale=remember {Animatable(.515f)}
-    LaunchedEffect(state.phaseIndex,paused,reduceMotion) {
-        val fraction=if(state.phaseDurationMillis==0L)0f else 1f-state.remainingMillis.toFloat()/state.phaseDurationMillis
-        val exact=when(state.phase) {
-            Phase.CONTRACT->.515f+.485f*fraction
-            Phase.RELAX->1f-.485f*fraction
-            else->.515f
-        }
-        scale.snapTo(if(reduceMotion).515f else exact)
-        if(!paused && !reduceMotion && state.phase in listOf(Phase.CONTRACT,Phase.RELAX))
-            scale.animateTo(if(state.phase==Phase.CONTRACT)1f else .515f,tween(state.remainingMillis.toInt(),easing=LinearEasing))
-    }
-    val circleNode=if(MaterialTheme.colorScheme.background.luminance()<.2f)"23:2344" else "23:855"
     ScrollContent {
         Text("Série ${state.set} / ${state.session.workout.sets} · ${state.repetition} / ${state.session.workout.blocks.sumOf {it.repetitions}}",
             Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(16.dp))
         Box(Modifier.fillMaxWidth().heightIn(min=280.dp),contentAlignment=Alignment.Center) {
-            Fig(circleNode,"imgAmplitudeMaxima",280.dp)
-            Fig(circleNode,"imgCirculoDeRitmo",144.dp,modifier=Modifier.scale(scale.value/.515f))
+            SecondSweepRing(state,paused,reduceMotion,Modifier.size(280.dp))
             Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
                 contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
                     Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contraia"
@@ -486,7 +506,11 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 if(!prefs.discreetScreen)Text(if(paused)"PAUSADO" else when(state.phase) {
                     Phase.CONTRACT->"CONTRAIA";Phase.RELAX->"RELAXE";Phase.REST->"DESCANSE";Phase.FINISHED->"CONCLUÍDO"
                 },color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold,letterSpacing=1.5.sp)
-                Text(state.secondsRemaining.toString(),fontSize=64.sp,color=MaterialTheme.colorScheme.onSurface)
+                Text(state.secondsRemaining.toString(),
+                    modifier=Modifier.width(144.dp),textAlign=TextAlign.Center,
+                    style=MaterialTheme.typography.headlineLarge.copy(
+                        fontSize=72.sp,lineHeight=88.sp,fontFeatureSettings="tnum"),
+                    color=MaterialTheme.colorScheme.primary)
             }
         }
         if(!prefs.discreetScreen)Text(when(state.phase) {
