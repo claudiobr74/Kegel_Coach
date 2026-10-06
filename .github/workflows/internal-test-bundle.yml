@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Optimized release 1.1.1 includes mapping and available native symbols.
+# Optimized release verifies onboarding and navigation.
 on:
   workflow_dispatch:
   push:

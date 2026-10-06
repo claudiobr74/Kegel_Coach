@@ -16,7 +16,7 @@ def screen():
 def tap(label):
     nodes = list(screen().iter("node"))
     node = next((n for n in nodes if n.get("text") == label or n.get("content-desc") == label), None)
-    assert node is not None, f"Missing navigation: {label}"
+    assert node is not None, f"Missing navigation: {label}: {ET.tostring(screen(), encoding='unicode')}"
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds")))
     adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
     time.sleep(2)
@@ -25,6 +25,8 @@ def tap(label):
 adb("logcat", "-c")
 adb("shell", "monkey", "-p", PACKAGE, "-c", "android.intent.category.LAUNCHER", "1")
 time.sleep(5)
+for label in ["Continuar", "Continuar", "Continuar", "COMEÇAR"]:
+    tap(label)
 for label in ["Treinos", "Progresso", "Ajustes", "Início"]:
     tap(label)
 logs = adb("logcat", "-d", "-b", "crash")
