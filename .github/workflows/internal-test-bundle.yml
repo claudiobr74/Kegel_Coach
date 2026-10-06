@@ -1,4 +1,5 @@
 name: Internal test bundle
+# Release source includes the seamless countdown ring.
 on:
   workflow_dispatch:
   push:
