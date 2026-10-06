@@ -52,6 +52,7 @@ class VisualTest {
         }
         compose.onNodeWithText("COMEÇAR").performScrollTo().performClick()
         compose.waitUntil(15000){compose.onAllNodesWithText("INICIAR TREINO").fetchSemanticsNodes().isNotEmpty()}
+        compose.onNodeWithContentDescription("Kegel Coach").assertIsDisplayed()
         capture("home")
         compose.onNodeWithText("Personalizar").performClick()
         capture("custom")
@@ -65,6 +66,7 @@ class VisualTest {
         compose.onNodeWithText("Escuro").performScrollTo().performClick()
         compose.onNodeWithText("Home").performClick()
         compose.waitUntil(10000) {bitmap().getPixel(4,4)==android.graphics.Color.rgb(17,30,36)}
+        compose.onNodeWithContentDescription("Kegel Coach").assertIsDisplayed()
         capture("home-dark")
         compose.onNodeWithText("Configurações").performClick()
         compose.onNodeWithText("Como fazer os exercícios").performScrollTo().performClick()

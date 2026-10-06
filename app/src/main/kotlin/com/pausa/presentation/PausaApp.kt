@@ -49,6 +49,24 @@ private fun duration(ms:Long):String {
 private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 
 @Composable fun Fig(node:String,asset:String,size:Dp,modifier:Modifier=Modifier,description:String?=null,tint:Color?=null) {
+    val nativeIcon=when("$node/$asset") {
+        "23:770/imgDestino" -> R.drawable.ic_ui_home
+        "23:770/imgDestino1" -> R.drawable.ic_ui_play
+        "23:770/imgDestino2" -> R.drawable.ic_ui_progress
+        "23:770/imgDestino3" -> R.drawable.ic_ui_settings
+        "23:770/imgIcone1" -> R.drawable.ic_ui_programs
+        "23:770/imgIcone2" -> R.drawable.ic_ui_pocket
+        "23:770/imgIcone3" -> R.drawable.ic_ui_reminders
+        "23:855/imgIcone" -> R.drawable.ic_ui_back
+        "23:1181/imgIcone1" -> R.drawable.ic_ui_minus
+        "23:1181/imgIcone2" -> R.drawable.ic_ui_plus
+        else -> null
+    }
+    if(nativeIcon!=null) {
+        Icon(painterResource(nativeIcon), contentDescription=description, modifier=modifier.size(size),
+            tint=tint ?: MaterialTheme.colorScheme.primary)
+        return
+    }
     val context=LocalContext.current
     val map=remember {JSONObject(context.assets.open("asset-map.json").bufferedReader().use {it.readText()})}
     val filename=map.getJSONObject(node).getString(asset)
@@ -60,6 +78,15 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     Image(painterResource(R.drawable.kegel_coach_logo), contentDescription="Kegel Coach",
         modifier=Modifier.width(208.dp).aspectRatio(1.5f), contentScale=ContentScale.Fit,
         colorFilter=ColorFilter.tint(MaterialTheme.colorScheme.primary))
+}
+@Composable internal fun HeaderBrand() {
+    Row(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription="Kegel Coach" },
+        verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+        Icon(painterResource(R.drawable.ic_brand_symbol),contentDescription=null,
+            modifier=Modifier.size(40.dp),tint=MaterialTheme.colorScheme.primary)
+        Text("Kegel Coach",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold,
+            color=MaterialTheme.colorScheme.primary,modifier=Modifier.weight(1f))
+    }
 }
 @Composable internal fun Title(text:String) {Text(text,style=MaterialTheme.typography.titleLarge)}
 @Composable internal fun Copy(text:String) {Text(text,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
@@ -162,7 +189,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                                     Box(Modifier.size(56.dp,32.dp).background(
                                         if(selected)MaterialTheme.colorScheme.primaryContainer else Color.Transparent,CircleShape),
                                         contentAlignment=Alignment.Center) {
-                                        Fig("23:770",listOf("imgDestino","imgDestino1","imgDestino2","imgDestino3")[i],20.dp,tint=color)
+                                        Fig("23:770",listOf("imgDestino","imgDestino1","imgDestino2","imgDestino3")[i],24.dp,tint=color)
                                     }
                                     Text(listOf("Home","Treino","Progresso","Configurações")[i],
                                         modifier=Modifier.fillMaxWidth().padding(horizontal=2.dp),textAlign=TextAlign.Center,
@@ -276,11 +303,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 @Composable private fun Home(settings:Settings,history:List<HistoryEntity>,session:TimerState?,start:()->Unit,
     navigate:(String)->Unit,quick:()->Unit) {
     ScrollContent(gap=10.dp) {
+        HeaderBrand()
         Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                Copy(when(LocalTime.now().hour){in 5..11->"Bom dia";in 12..17->"Boa tarde";else->"Boa noite"})
-                Spacer(Modifier.weight(1f));Fig("23:770","imgIcone",18.dp,tint=MaterialTheme.colorScheme.primary)
-            }
+            Copy(when(LocalTime.now().hour){in 5..11->"Bom dia";in 12..17->"Boa tarde";else->"Boa noite"})
             Title("Seu treino de hoje")
         }
         if(session!=null && session.session.status!=SessionStatus.COMPLETED)Panel {
@@ -318,7 +343,10 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 Triple("Lembretes","reminders","imgIcone3")).forEach {(label,r,a)->
                 Column(Modifier.weight(1f).clickable {navigate(r)}.heightIn(min=56.dp).padding(4.dp),
                     horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                    Fig("23:770",a,20.dp,tint=MaterialTheme.colorScheme.primary)
+                    Box(Modifier.size(48.dp).background(MaterialTheme.colorScheme.surfaceVariant,CircleShape),
+                        contentAlignment=Alignment.Center) {
+                        Fig("23:770",a,26.dp,tint=MaterialTheme.colorScheme.primary)
+                    }
                     Text(label,style=MaterialTheme.typography.labelSmall)
                 }
             }

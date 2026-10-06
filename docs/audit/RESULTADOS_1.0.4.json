@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-05",
+  "version_name": "1.0.4",
+  "version_code": 5,
+  "package": "com.kegel_coach.myapp",
+  "source_worktree": "Validated Home brand header and rounded native icon updates; changes committed after build validation",
+  "source_base_commit": "7a6493c0d7107e508a263ffdc6530adde090a33c",
+  "tests_total": 35,
+  "tests": [
+    {
+      "suite": "com.pausa.domain.CueContinuityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.domain.ManualDemoTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.domain.WorkoutTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.BrandTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.ManualTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.VisualTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.data.PersistenceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.reminders.ReminderTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.pausa.service.HapticGuidanceTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "lint_errors": 0,
+  "lint_warnings": 0,
+  "jarsigner_verified": true,
+  "upload_certificate_sha256": "DF:51:B7:F3:87:55:54:8C:F4:12:CE:34:2C:2E:24:66:D1:16:C0:1B:02:0E:9C:74:92:B6:B1:C2:D9:D6:95:9F",
+  "aab_sha256": "239f99b8d5fe338f6335699cb576e2f2b4a8171734a88dab3d3f2123f7862963",
+  "aab_bytes": 19642839,
+  "merged_permissions": [
+    "android.permission.VIBRATE",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+    "com.kegel_coach.myapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "manual_assets": [
+    "base/assets/manual/01_prepare.png",
+    "base/assets/manual/02_contraia.png",
+    "base/assets/manual/03_mantenha.png",
+    "base/assets/manual/04_relaxe.png",
+    "base/assets/manual/05_rapida_contraia.png",
+    "base/assets/manual/06_rapida_relaxe.png"
+  ],
+  "instrumentation": "Compiled; not run locally",
+  "physical_device_testing": "Pending"
+}
