@@ -23,6 +23,8 @@ class SmokeTest {
         compose.onNodeWithText("Treino rápido").performScrollTo().performClick()
         compose.waitUntil(10000){compose.onAllNodesWithText("Pausar").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithText("Pausar").performClick()
+        compose.waitUntil(10000){compose.onAllNodesWithText("Retomar").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithText("Retomar").assertExists()
     }
 }
+
