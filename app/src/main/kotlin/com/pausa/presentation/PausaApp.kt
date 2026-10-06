@@ -492,8 +492,8 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
 }
 
-/** One clockwise sweep per second; the service remains the source of timer values. */
-@Composable private fun SecondSweepRing(state:TimerState,paused:Boolean,reduceMotion:Boolean,modifier:Modifier=Modifier) {
+/** One clockwise sweep over the entire phase; the service owns the timer. */
+@Composable private fun PhaseSweepRing(state:TimerState,paused:Boolean,reduceMotion:Boolean,modifier:Modifier=Modifier) {
     val elapsed=remember(state.session.id,state.phaseIndex) {
         Animatable((state.phaseDurationMillis-state.remainingMillis).coerceAtLeast(0L).toFloat())
     }
@@ -508,7 +508,8 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
     val color=MaterialTheme.colorScheme.primary
     Canvas(modifier) {
-        val progress=if(reduceMotion || state.phase==Phase.FINISHED)1f else (elapsed.value % 1000f)/1000f
+        val progress=if(reduceMotion || state.phase==Phase.FINISHED)1f else
+            (elapsed.value/state.phaseDurationMillis.coerceAtLeast(1L).toFloat()).coerceIn(0f,1f)
         val diameter=size.minDimension*.80f
         val inset=androidx.compose.ui.geometry.Offset((size.width-diameter)/2f,(size.height-diameter)/2f)
         val arcSize=androidx.compose.ui.geometry.Size(diameter,diameter)
@@ -563,7 +564,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.size(dialSize),contentAlignment=Alignment.Center) {
-                    SecondSweepRing(state,paused,reduceMotion,Modifier.fillMaxSize())
+                    PhaseSweepRing(state,paused,reduceMotion,Modifier.fillMaxSize())
                     Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.semantics(mergeDescendants=true) {
                         contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
                             Phase.CONTRACT->"Contrair"

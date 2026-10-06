@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.3: phase labels remain visible in discreet screen mode.
+# Release 1.1.3: visible phase labels and one ring revolution per phase.
 on:
   workflow_dispatch:
   push:
