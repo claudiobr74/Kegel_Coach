@@ -1,4 +1,4 @@
-name: Signed internal test bundle
+name: Internal test bundle
 on:
   workflow_dispatch:
   push:
@@ -23,7 +23,21 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Validate source
         run: ./gradlew :domain:test :app:testDebugUnitTest :app:lintRelease
+      - name: Check configured signing
+        id: signing
+        env:
+          UPLOAD_KEY_BASE64: ${{ secrets.KEGEL_UPLOAD_KEY_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.KEGEL_UPLOAD_STORE_PASSWORD }}
+          UPLOAD_ALIAS: ${{ secrets.KEGEL_UPLOAD_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEGEL_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$UPLOAD_KEY_BASE64" ] && [ -n "$STORE_PASSWORD" ] && [ -n "$UPLOAD_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+          fi
       - name: Prepare upload key
+        if: steps.signing.outputs.available == 'true'
         env:
           UPLOAD_KEY_BASE64: ${{ secrets.KEGEL_UPLOAD_KEY_BASE64 }}
         run: |
@@ -35,7 +49,11 @@ jobs:
           path.write_bytes(base64.b64decode(os.environ['UPLOAD_KEY_BASE64'], validate=True))
           path.chmod(0o600)
           PY
+      - name: Build AAB for local signing
+        if: steps.signing.outputs.available != 'true'
+        run: ./gradlew :app:bundleRelease
       - name: Build signed AAB
+        if: steps.signing.outputs.available == 'true'
         env:
           KEGEL_UPLOAD_STORE: ${{ runner.temp }}/upload.jks
           KEGEL_UPLOAD_STORE_PASSWORD: ${{ secrets.KEGEL_UPLOAD_STORE_PASSWORD }}

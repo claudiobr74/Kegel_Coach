@@ -1,6 +1,7 @@
 name: Android verification
 on:
   push:
+    paths-ignore: ['.github/workflows/internal-test-bundle.yml']
   pull_request:
 permissions:
   contents: read
