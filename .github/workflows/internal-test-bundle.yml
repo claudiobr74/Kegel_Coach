@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.2 adds the approved monogram and native startup.
+# Release 1.1.2: approved monogram, native startup, and activity restoration.
 on:
   workflow_dispatch:
   push:
@@ -101,3 +101,4 @@ jobs:
           from pathlib import Path
           (Path(os.environ['RUNNER_TEMP']) / 'upload.jks').unlink(missing_ok=True)
           PY
+
