@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Optimized release verifies onboarding and navigation.
+# Optimized release includes Contrair / Relaxar phase labels.
 on:
   workflow_dispatch:
   push:

@@ -558,13 +558,13 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                     SecondSweepRing(state,paused,reduceMotion,Modifier.fillMaxSize())
                     Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
                         contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
-                            Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contraia"
-                            Phase.RELAX->if(prefs.discreetScreen)"Fase dois" else "Relaxe"
+                            Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contrair"
+                            Phase.RELAX->if(prefs.discreetScreen)"Fase dois" else "Relaxar"
                             Phase.REST->"Intervalo";Phase.FINISHED->"Concluído"
                         }) + ", ${state.secondsRemaining} segundos restantes"
                     }) {
                         if(!prefs.discreetScreen)Text(if(paused)"Pausado" else when(state.phase) {
-                            Phase.CONTRACT->"Contraia";Phase.RELAX->"Relaxe";Phase.REST->"Descanse";Phase.FINISHED->"Concluído"
+                            Phase.CONTRACT->"Contrair";Phase.RELAX->"Relaxar";Phase.REST->"Descanse";Phase.FINISHED->"Concluído"
                         },style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.primary)
                         Text(state.secondsRemaining.toString(),modifier=Modifier.fillMaxWidth().padding(horizontal=24.dp),textAlign=TextAlign.Center,
                             style=MaterialTheme.typography.headlineLarge.copy(fontSize=64.sp,lineHeight=76.sp,fontFeatureSettings="tnum"),
