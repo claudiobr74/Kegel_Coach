@@ -21,8 +21,8 @@ class BrandTest {
     @Test fun installedLauncherUsesAdaptiveIconAndCorrectVersion() {
         val context=ApplicationProvider.getApplicationContext<Context>()
         assertTrue(context.getDrawable(R.mipmap.ic_launcher) is AdaptiveIconDrawable)
-        assertEquals("1.1.0",BuildConfig.VERSION_NAME)
-        assertEquals(6,BuildConfig.VERSION_CODE)
+        assertEquals("1.1.1",BuildConfig.VERSION_NAME)
+        assertEquals(7,BuildConfig.VERSION_CODE)
         assertNotNull(context.getDrawable(R.drawable.ic_notification))
         val canvasBitmap=Bitmap.createBitmap(432,432,Bitmap.Config.ARGB_8888)
         context.getDrawable(R.mipmap.ic_launcher)!!.apply {setBounds(0,0,432,432);draw(Canvas(canvasBitmap))}
