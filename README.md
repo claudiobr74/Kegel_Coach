@@ -1,6 +1,6 @@
 # Kegel_Coach · Pausa
 
-Aplicativo Android nativo, offline e sem cadastro para pequenos treinos de contração e relaxamento do assoalho pélvico. A marca visual **pausa.** é a definida no [Figma oficial](https://www.figma.com/design/NvslB6GbO1MlN3mq3wr0nz/Kegel_Coach?node-id=0-1).
+Aplicativo Android nativo, offline e sem cadastro para pequenos treinos de contração e relaxamento do assoalho pélvico. A identidade Kegel Coach usa uma paleta verde discreta, tipografia Inter e componentes Android nativos. A interface 1.1.0 evolui independentemente do protótipo inicial.
 
 ## Executar
 
@@ -12,6 +12,18 @@ Abra o projeto no Android Studio com **JDK 17**, SDK Android 36 e Build Tools co
 ```
 
 A entrega é um Android App Bundle em `app/build/outputs/bundle/release/app-release.aab`. Consulte [distribution/README.md](distribution/README.md) para assinatura de upload e teste interno. Sem a chave privada de upload, o AAB de release é gerado não assinado. O pacote oficial é `com.kegel_coach.myapp`.
+
+## Interface 1.1.0
+
+- Navegação: Início, Treinos, Progresso e Ajustes.
+- Um cartão principal para iniciar ou continuar o treino ativo.
+- Contagem com anel por segundo, números tabulares e pausa sincronizada.
+- Controles de sessão fixos e opções secundárias em painel inferior.
+- Catálogo com treino selecionado e detalhes expansíveis.
+- Personalização com edição numérica e duração/ações persistentes.
+- Manual com passos numerados e ícones vetoriais consistentes.
+- Regularidade nas quatro últimas semanas e estados vazios orientativos.
+- Confirmação de gravação de treino e lembretes.
 
 ## Funcionalidades
 
@@ -56,7 +68,7 @@ A publicação na Google Play exige declarar e submeter esse uso do foreground s
 
 Lembretes usam alarmes **inexatos** com `setAndAllowWhileIdle`, sem pedir permissão especial para alarmes exatos. O Android pode atrasá-los em economia de bateria. Adiamentos usam relógio monotônico; horários diários usam data/hora e fuso locais. Boot, alteração de hora/fuso e atualização do aplicativo reprogramam os horários. As quatro ações estão disponíveis na notificação expandida.
 
-## Figma → Compose
+## Origem do protótipo
 
 Foram consultados Foundations, onboarding, Home, treino, personalizado, programas, progresso, lembretes, configurações e modo escuro pelo Figma MCP. Os links temporários de assets ficaram indisponíveis; os SVGs foram então exportados das **camadas originais pelo mesmo MCP**, sem redesenho. A correspondência entre camadas e arquivos está em `design/asset-map.json`.
 

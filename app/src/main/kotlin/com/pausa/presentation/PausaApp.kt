@@ -29,6 +29,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,17 +94,17 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 @Composable internal fun Title(text:String) {Text(text,style=MaterialTheme.typography.titleLarge)}
 @Composable internal fun Copy(text:String) {Text(text,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
 @Composable internal fun Primary(text:String,onClick:()->Unit,enabled:Boolean=true) {
-    Button(onClick,Modifier.fillMaxWidth().heightIn(min=56.dp),enabled=enabled,shape=CircleShape) {Text(text)}
+    Button(onClick,Modifier.fillMaxWidth().heightIn(min=56.dp),enabled=enabled,shape=RoundedCornerShape(16.dp)) {Text(text)}
 }
 @Composable internal fun Secondary(text:String,onClick:()->Unit,modifier:Modifier=Modifier) {
-    FilledTonalButton(onClick,modifier.fillMaxWidth().heightIn(min=48.dp),shape=CircleShape,
+    FilledTonalButton(onClick,modifier.fillMaxWidth().heightIn(min=48.dp),shape=RoundedCornerShape(14.dp),
         colors=ButtonDefaults.filledTonalButtonColors(containerColor=MaterialTheme.colorScheme.surfaceVariant,
             contentColor=MaterialTheme.colorScheme.primary)) {Text(text)}
 }
 @Composable internal fun Panel(accent:Boolean=false,padding:Dp=16.dp,gap:Dp=12.dp,content:@Composable ColumnScope.()->Unit) {
     Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(20.dp),
         color=if(accent)MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        shadowElevation=1.dp) {Column(Modifier.padding(padding),verticalArrangement=Arrangement.spacedBy(gap),content=content)}
+        shadowElevation=0.dp) {Column(Modifier.padding(padding),verticalArrangement=Arrangement.spacedBy(gap),content=content)}
 }
 @Composable internal fun ScrollContent(gap:Dp=12.dp,content:@Composable ColumnScope.()->Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -124,6 +127,8 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     var clearHistory by remember {mutableStateOf(false)}
     var info by remember {mutableStateOf<String?>(null)}
     var handledReminder by rememberSaveable {mutableIntStateOf(0)}
+    val snackbar=remember {SnackbarHostState()}
+    LaunchedEffect(vm) {vm.feedbackEvents.collect {snackbar.showSnackbar(it)}}
     val context=LocalContext.current
     val permission=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     fun askNotifications() {if(Build.VERSION.SDK_INT>=33 &&
@@ -165,10 +170,10 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             Scaffold(containerColor=MaterialTheme.colorScheme.background,
                 topBar={if(route!="home")TopAppBar(title={Title(when(route){
                     "session"->if(current.user.discreetScreen)"Pausa" else "Treino"
-                    "programs"->"Programas";"custom"->"Personalizar treino";"progress"->"Progresso"
+                    "programs"->"Treinos";"custom"->"Personalizar treino";"progress"->"Progresso"
                     "reminders"->"Lembretes";"pocket"->"Modo bolso";"finished"->"Treino concluído"
                     "manual"->stringResource(R.string.manual_title)
-                    else->"Configurações"
+                    else->"Ajustes"
                 })},navigationIcon={TextButton(onClick={
                     if(route=="session" && session!=null)confirmEnd=true else {
                         if(route=="finished")vm.dismissCompleted()
@@ -177,33 +182,24 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 },modifier=Modifier.sizeIn(minWidth=48.dp,minHeight=48.dp)) {
                     Fig("23:855","imgIcone",24.dp,description="Voltar",tint=MaterialTheme.colorScheme.onSurface)
                 }},colors=TopAppBarDefaults.topAppBarColors(containerColor=MaterialTheme.colorScheme.background))},
+                snackbarHost={SnackbarHost(snackbar)},
                 bottomBar={if(route in destinations) {
-                    Surface(color=MaterialTheme.colorScheme.surface) {
-                        Row(Modifier.fillMaxWidth().navigationBarsPadding().selectableGroup()) {
-                            destinations.forEachIndexed {i,r->
-                                val selected=route==r
-                                val color=if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                Column(Modifier.weight(1f).heightIn(min=80.dp)
-                                    .selectable(selected=selected,role=Role.Tab,onClick={route=r}).padding(top=8.dp,bottom=12.dp),
-                                    horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                    Box(Modifier.size(56.dp,32.dp).background(
-                                        if(selected)MaterialTheme.colorScheme.primaryContainer else Color.Transparent,CircleShape),
-                                        contentAlignment=Alignment.Center) {
-                                        Fig("23:770",listOf("imgDestino","imgDestino1","imgDestino2","imgDestino3")[i],24.dp,tint=color)
-                                    }
-                                    Text(listOf("Home","Treino","Progresso","Configurações")[i],
-                                        modifier=Modifier.fillMaxWidth().padding(horizontal=2.dp),textAlign=TextAlign.Center,
-                                        style=MaterialTheme.typography.labelSmall,fontSize=if(i==3)10.sp else 11.sp,
-                                        fontWeight=if(selected)FontWeight.SemiBold else FontWeight.Normal,color=color)
-                                }
-                            }
+                    NavigationBar(containerColor=MaterialTheme.colorScheme.surface) {
+                        destinations.forEachIndexed {i,r->
+                            NavigationBarItem(selected=route==r,onClick={route=r},
+                                icon={Fig("23:770",listOf("imgDestino","imgDestino1","imgDestino2","imgDestino3")[i],24.dp,
+                                    tint=if(route==r)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)},
+                                label={Text(listOf("Início","Treinos","Progresso","Ajustes")[i],
+                                    style=MaterialTheme.typography.labelMedium)},
+                                colors=NavigationBarItemDefaults.colors(indicatorColor=MaterialTheme.colorScheme.primaryContainer))
                         }
                     }
                 }}
             ) {padding ->
                 Box(Modifier.padding(padding)) {
                     when(route) {
-                        "home"->Home(current,history,session,{start(current.workout)},{route=it},{start(WorkoutPreset.quick)})
+                        "home"->Home(current,history,session,{start(current.workout)},
+                            {if(it=="manual")openManual("home") else route=it},{start(WorkoutPreset.quick)})
                         "programs"->Programs({start(it)},{vm.selectWorkout(it);route="home"},{route="custom"},current,history,{vm.advance()})
                         "custom"->CustomWorkout(current.workout,{vm.selectWorkout(it);route="home"},{start(it)})
                         "session"->SessionScreen(session,current.user,message,
@@ -232,7 +228,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 text={Copy("Todos os registros locais de treinos serão excluídos.")},
                 confirmButton={TextButton(onClick={vm.clearHistory();clearHistory=false}){Text("Excluir")}},
                 dismissButton={TextButton(onClick={clearHistory=false}){Text("Cancelar")}})
-            if(info!=null)AlertDialog(onDismissRequest={info=null},title={Title("Pausa")},
+            if(info!=null)AlertDialog(onDismissRequest={info=null},title={Title("Kegel Coach")},
                 text={Copy(info!!)},confirmButton={TextButton(onClick={info=null}){Text("Entendi")}})
         }
     }
@@ -300,59 +296,57 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
 }
 
-@Composable private fun Home(settings:Settings,history:List<HistoryEntity>,session:TimerState?,start:()->Unit,
+@Composable internal fun Home(settings:Settings,history:List<HistoryEntity>,session:TimerState?,start:()->Unit,
     navigate:(String)->Unit,quick:()->Unit) {
-    ScrollContent(gap=10.dp) {
+    val active=session!=null && session.session.status!=SessionStatus.COMPLETED
+    ScrollContent(gap=20.dp) {
         HeaderBrand()
-        Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
-            Copy(when(LocalTime.now().hour){in 5..11->"Bom dia";in 12..17->"Boa tarde";else->"Boa noite"})
-            Title("Seu treino de hoje")
-        }
-        if(session!=null && session.session.status!=SessionStatus.COMPLETED)Panel {
-            Text(if(session.session.status==SessionStatus.PAUSED)"Você tem um treino pausado" else "Seu treino está em andamento")
-            Primary("VOLTAR AO TREINO",{navigate("session")})
-        }
-        Panel(true) {
-            Text("TREINO DE HOJE",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
-            val workout=settings.workout
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(2.dp)) {
-                    workout.blocks.forEach { block ->
-                        Text("${block.contractSeconds} s contração · ${block.relaxSeconds} s relaxamento",color=MaterialTheme.colorScheme.onSurface)
-                        Text("${block.repetitions} repetições por série",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Text("${workout.sets} ${if(workout.sets==1) "série" else "séries"} · ${workout.contractions} contrações no total",
-                        style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Column(Modifier.width(82.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                    val ms=settings.workout.durationMillis
-                    Text(if(ms<60000)"≈ ${ms/1000} s" else "≈ ${(ms+59999)/60000} min",
-                        style=MaterialTheme.typography.titleLarge,color=MaterialTheme.colorScheme.primary)
-                    Text("no seu ritmo",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+        Copy(when(LocalTime.now().hour){in 5..11->"Bom dia. Vamos cuidar da sua rotina?";
+            in 12..17->"Boa tarde. Um momento para você.";else->"Boa noite. Um momento para você."})
+        Panel(true,padding=20.dp,gap=16.dp) {
+            Text(if(active)"Treino em andamento" else "Treino de hoje",style=MaterialTheme.typography.labelLarge,
+                color=MaterialTheme.colorScheme.primary)
+            val workout=if(active)session!!.session.workout else settings.workout
+            Text(workout.name,style=MaterialTheme.typography.headlineMedium)
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+                Text(duration(workout.durationMillis),style=MaterialTheme.typography.titleLarge,
+                    color=MaterialTheme.colorScheme.primary)
+                Text("${workout.sets} ${if(workout.sets==1)"série" else "séries"} · ${workout.contractions} contrações",
+                    style=MaterialTheme.typography.bodyMedium,modifier=Modifier.weight(1f))
             }
-            Primary("INICIAR TREINO",start,session==null || session.session.status==SessionStatus.COMPLETED)
+            if(active) {
+                Copy(if(session!!.session.status==SessionStatus.PAUSED)"Pausado. Retome quando estiver pronto."
+                    else "Sua sessão continua em andamento.")
+                Primary("Continuar treino",{navigate("session")})
+            } else {
+                workout.blocks.forEach {Copy("Contraia ${it.contractSeconds} s · Relaxe ${it.relaxSeconds} s")}
+                Primary("Iniciar treino",start)
+            }
         }
         WeekPanel(history)
-        Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+        if(!active)Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
             Secondary("Treino rápido",quick,Modifier.weight(1f))
             Secondary("Personalizar",{navigate("custom")},Modifier.weight(1f))
         }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly) {
-            listOf(Triple("Programas","programs","imgIcone1"),Triple("Modo bolso","pocket","imgIcone2"),
-                Triple("Lembretes","reminders","imgIcone3")).forEach {(label,r,a)->
-                Column(Modifier.weight(1f).clickable {navigate(r)}.heightIn(min=56.dp).padding(4.dp),
-                    horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                    Box(Modifier.size(48.dp).background(MaterialTheme.colorScheme.surfaceVariant,CircleShape),
-                        contentAlignment=Alignment.Center) {
-                        Fig("23:770",a,26.dp,tint=MaterialTheme.colorScheme.primary)
-                    }
-                    Text(label,style=MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
+        ActionRow("Como fazer os exercícios","Veja a técnica e as demonstrações",R.drawable.ic_ui_manual,{navigate("manual")})
+        ActionRow("Modo bolso","Acompanhe o ritmo por vibrações",R.drawable.ic_ui_pocket,{navigate("pocket")})
+        ActionRow("Lembretes","Escolha os melhores horários",R.drawable.ic_ui_reminders,{navigate("reminders")})
     }
 }
+
+@Composable private fun ActionRow(title:String,detail:String,icon:Int,onClick:()->Unit) {
+    Row(Modifier.fillMaxWidth().clickable(role=Role.Button,onClick=onClick).heightIn(min=64.dp).padding(vertical=8.dp),
+        verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+        Icon(painterResource(icon),contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(24.dp))
+        Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+            Text(title,style=MaterialTheme.typography.titleMedium)
+            Text(detail,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Icon(painterResource(R.drawable.ic_ui_chevron),contentDescription=null,
+            tint=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.size(20.dp))
+    }
+}
+
 @Composable private fun WeekPanel(history:List<HistoryEntity>) {
     val today=LocalDate.now();val monday=today.minusDays((today.dayOfWeek.value-1).toLong())
     val dates=history.map {LocalDate.parse(it.localDate)}.toSet()
@@ -361,13 +355,13 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             repeat(7) {i->
                 val done=monday.plusDays(i.toLong()) in dates
-                Surface(shape=RoundedCornerShape(12.dp),color=if(done)MaterialTheme.colorScheme.primary else Color.Transparent,
+                Surface(modifier=Modifier.weight(1f).padding(horizontal=2.dp),shape=RoundedCornerShape(12.dp),color=if(done)MaterialTheme.colorScheme.primary else Color.Transparent,
                     border=BorderStroke(1.dp,if(done)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)) {
-                    Column(Modifier.widthIn(min=34.dp).heightIn(min=48.dp).padding(4.dp).semantics {
+                    Column(Modifier.fillMaxWidth().heightIn(min=48.dp).padding(vertical=6.dp).semantics {
                         contentDescription="${dayNames[i]}: ${if(done)"concluído" else "sem treino"}"
                     },horizontalAlignment=Alignment.CenterHorizontally) {
-                        Text(dayNames[i],fontSize=10.sp,lineHeight=18.sp,color=if(done)MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(if(done)"✓" else "○",fontSize=10.sp,lineHeight=18.sp,color=if(done)MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(dayNames[i].take(1),fontSize=12.sp,lineHeight=20.sp,color=if(done)MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if(done)"✓" else "·",fontSize=14.sp,lineHeight=20.sp,color=if(done)MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -375,7 +369,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
             Text("${(0..6).count {monday.plusDays(it.toLong()) in dates}} de 7 dias",style=MaterialTheme.typography.bodySmall,
                 color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Sequência / ${Progress.streak(dates,today)} dias",style=MaterialTheme.typography.bodySmall,
+            Text("${Progress.streak(dates,today)} dias seguidos",style=MaterialTheme.typography.bodySmall,
                 fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.primary)
         }
     }
@@ -383,26 +377,63 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
 
 @Composable private fun Programs(start:(Workout)->Unit,select:(Workout)->Unit,custom:()->Unit,
     settings:Settings,history:List<HistoryEntity>,advance:()->Unit) {
-    ScrollContent {
-        Title("Encontre seu ritmo.");Copy("Comece com conforto. Avance aos poucos.")
+    var expanded by rememberSaveable {mutableStateOf<String?>(null)}
+    ScrollContent(gap=20.dp) {
+        Copy("Escolha um ritmo confortável. Você pode ajustar depois.")
+        Panel(true,padding=20.dp) {
+            Text("Seu treino selecionado",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
+            Title(settings.workout.name)
+            Copy("${duration(settings.workout.durationMillis)} · ${settings.workout.contractions} contrações")
+            Primary("Iniciar treino",{start(settings.workout)})
+        }
         val completedDays=history.filter {it.programWeek==settings.progressionWeek && it.completedAt>=settings.progressionStarted}
             .map {it.localDate}.distinct().size
-        if(settings.user.progressionEnabled && ProgressionPlan.suggestion(settings.progressionWeek,completedDays)!=null)Panel(true) {
-            Text("Você completou seu programa desta semana.")
-            Copy("Quer avançar para o próximo nível? Continue no atual se ainda estiver difícil.")
+        if(settings.user.progressionEnabled && ProgressionPlan.suggestion(settings.progressionWeek,completedDays)!=null)Panel {
+            Title("Pronto para o próximo ritmo?")
+            Copy("Você também pode continuar no nível atual.")
             Secondary("Avançar para semana ${settings.progressionWeek+2}",advance)
         }
-        WorkoutPreset.all.forEach {w->Panel {
-            Text(w.name.uppercase(pt),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
-            w.blocks.forEach {Text("${it.contractSeconds} s contração / ${it.relaxSeconds} s relaxamento · ${it.repetitions} repetições")}
-            Copy("${w.sets} série(s) · ${duration(w.durationMillis)}")
-            Primary("INICIAR",{start(w)})
-            TextButton(onClick={select(w)},modifier=Modifier.fillMaxWidth()){Text("Usar como treino do dia")}
-        }}
+        Title("Explore os treinos")
+        WorkoutPreset.all.forEach {w->
+            val selected=w.id==settings.workout.id
+            Panel(gap=12.dp) {
+                Row(Modifier.fillMaxWidth().heightIn(min=48.dp).clickable(role=Role.Button){expanded=if(expanded==w.id)null else w.id},
+                    verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                        Text(w.name,style=MaterialTheme.typography.titleMedium)
+                        Copy("${duration(w.durationMillis)} · ${w.sets} ${if(w.sets==1)"série" else "séries"}")
+                    }
+                    if(selected)Text("Selecionado",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.primary)
+                    Icon(painterResource(if(expanded==w.id)R.drawable.ic_ui_expand_less else R.drawable.ic_ui_expand_more),
+                        contentDescription=if(expanded==w.id)"Recolher ${w.name}" else "Detalhes de ${w.name}",modifier=Modifier.size(20.dp))
+                }
+                if(expanded==w.id) {
+                    HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                    w.blocks.forEach {Copy("Contraia ${it.contractSeconds} s · Relaxe ${it.relaxSeconds} s · ${it.repetitions} repetições")}
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick={start(w)},modifier=Modifier.weight(1f).heightIn(min=48.dp)){Text("Treinar agora")}
+                        if(!selected)TextButton(onClick={select(w)},modifier=Modifier.weight(1f).heightIn(min=48.dp)){Text("Selecionar")}
+                    }
+                }
+            }
+        }
         Secondary("Personalizar treino",custom)
     }
 }
 @Composable private fun Stepper(label:String,value:Int,range:IntRange,unit:String="",step:Int=1,onChange:(Int)->Unit) {
+    var editing by rememberSaveable {mutableStateOf(false)}
+    var draft by rememberSaveable {mutableStateOf(value.toString())}
+    if(editing) {
+        val entered=draft.toIntOrNull()
+        AlertDialog(onDismissRequest={editing=false},title={Title(label)},text={
+            OutlinedTextField(value=draft,onValueChange={draft=it.filter(Char::isDigit).take(4)},
+                label={Text("${range.first} a ${range.last}${unit}")},singleLine=true,
+                keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+                isError=entered==null || entered !in range)
+        },confirmButton={TextButton(onClick={entered?.takeIf {it in range}?.let(onChange);editing=false},
+            enabled=entered!=null && entered in range){Text("Aplicar")}},
+            dismissButton={TextButton(onClick={editing=false}){Text("Cancelar")}})
+    }
     val largeFont=androidx.compose.ui.platform.LocalDensity.current.fontScale>1.3f
     val controls:@Composable ()->Unit = {
         Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.surface) {
@@ -410,7 +441,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 IconButton(onClick={onChange((value-step).coerceAtLeast(range.first))},enabled=value>range.first) {
                     Fig("23:1181","imgIcone1",24.dp,description="Diminuir $label",tint=MaterialTheme.colorScheme.onSurface)
                 }
-                Text("$value$unit",Modifier.widthIn(min=60.dp),textAlign=TextAlign.Center,
+                Text("$value$unit",Modifier.widthIn(min=60.dp).heightIn(min=48.dp)
+                    .clickable(role=Role.Button,onClickLabel="Editar $label"){draft=value.toString();editing=true}
+                    .wrapContentHeight(),textAlign=TextAlign.Center,
                     style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Medium)
                 IconButton(onClick={onChange((value+step).coerceAtMost(range.last))},enabled=value<range.last) {
                     Fig("23:1181","imgIcone2",24.dp,description="Aumentar $label",tint=MaterialTheme.colorScheme.onSurface)
@@ -424,24 +457,29 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         Text(label,Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium);controls()
     }
 }
-@Composable private fun CustomWorkout(initial:Workout,save:(Workout)->Unit,start:(Workout)->Unit) {
+@Composable internal fun CustomWorkout(initial:Workout,save:(Workout)->Unit,start:(Workout)->Unit) {
     var c by rememberSaveable {mutableIntStateOf(initial.blocks.first().contractSeconds)}
     var r by rememberSaveable {mutableIntStateOf(initial.blocks.first().relaxSeconds)}
     var reps by rememberSaveable {mutableIntStateOf(initial.blocks.first().repetitions)}
     var sets by rememberSaveable {mutableIntStateOf(initial.sets)}
     var rest by rememberSaveable {mutableIntStateOf(initial.restSeconds)}
     val workout=Workout("custom","Personalizado",listOf(WorkoutBlock(c,r,reps)),sets,rest)
-    ScrollContent {
-        Copy("Ajuste o ritmo. Respeite seu conforto.")
+    Column(Modifier.fillMaxSize().padding(20.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        Copy("Ajuste o ritmo. Toque em um valor para digitá-lo.")
         Stepper("Contração",c,1..30," s"){c=it}
         Stepper("Relaxamento",r,1..30," s"){r=it}
         Stepper("Repetições",reps,1..50){reps=it}
         Stepper("Séries",sets,1..10){sets=it}
         Stepper("Intervalo entre séries",rest,10..300," s",10){rest=it}
-        Panel(true) {Copy("Duração calculada");Title(duration(workout.durationMillis))}
-        Copy("Inclui contrações, relaxamentos e intervalos entre séries. Sem preparação adicional.")
-        Primary("SALVAR TREINO",{save(workout)})
-        Secondary("Iniciar agora",{start(workout)})
+        Copy("Inclui contrações, relaxamentos e intervalos entre séries.")
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+            Copy("Duração total");Title(duration(workout.durationMillis))
+        }
+        Primary("Salvar treino",{save(workout)})
+        TextButton(onClick={start(workout)},modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text("Treinar agora")}
+
     }
 }
 
@@ -479,7 +517,8 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
 }
 
-@Composable private fun SessionScreen(state:TimerState?,prefs:UserPreferences,message:String?,pause:()->Unit,
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable internal fun SessionScreen(state:TimerState?,prefs:UserPreferences,message:String?,pause:()->Unit,
     end:()->Unit,discreet:()->Unit,pocket:()->Unit) {
     if(state==null) {
         Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center) {
@@ -490,46 +529,66 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     val paused=state.session.status==SessionStatus.PAUSED
     val context=LocalContext.current
     val reduceMotion=AndroidSettings.Global.getFloat(context.contentResolver,AndroidSettings.Global.ANIMATOR_DURATION_SCALE,1f)==0f
-    ScrollContent {
-        Text("Série ${state.set} / ${state.session.workout.sets} · ${state.repetition} / ${state.session.workout.blocks.sumOf {it.repetitions}}",
-            Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(16.dp))
-        Box(Modifier.fillMaxWidth().heightIn(min=280.dp),contentAlignment=Alignment.Center) {
-            SecondSweepRing(state,paused,reduceMotion,Modifier.size(280.dp))
-            Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
-                contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
-                    Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contraia"
-                    Phase.RELAX->if(prefs.discreetScreen)"Fase dois" else "Relaxe"
-                    Phase.REST->"Intervalo";Phase.FINISHED->"Concluído"
-                }) + ", ${state.secondsRemaining} segundos restantes"
-            }) {
-                if(!prefs.discreetScreen)Text(if(paused)"PAUSADO" else when(state.phase) {
-                    Phase.CONTRACT->"CONTRAIA";Phase.RELAX->"RELAXE";Phase.REST->"DESCANSE";Phase.FINISHED->"CONCLUÍDO"
-                },color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold,letterSpacing=1.5.sp)
-                Text(state.secondsRemaining.toString(),
-                    modifier=Modifier.width(144.dp),textAlign=TextAlign.Center,
-                    style=MaterialTheme.typography.headlineLarge.copy(
-                        fontSize=72.sp,lineHeight=88.sp,fontFeatureSettings="tnum"),
-                    color=MaterialTheme.colorScheme.primary)
+    var options by rememberSaveable {mutableStateOf(false)}
+    if(options)ModalBottomSheet(onDismissRequest={options=false}) {
+        Column(Modifier.padding(horizontal=24.dp).padding(bottom=24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Title("Opções do treino")
+            ActionRow(if(prefs.discreetScreen)"Tela normal" else "Tela discreta","Altere as informações exibidas",
+                R.drawable.ic_ui_settings,{discreet();options=false})
+            ActionRow("Modo bolso","Ative vibrações e bloqueie a tela pelo botão do aparelho",
+                R.drawable.ic_ui_pocket,{pocket();options=false})
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val largeFont=androidx.compose.ui.platform.LocalDensity.current.fontScale>1.3f
+        val dialSize=if(largeFont)280.dp else if(maxHeight<540.dp)220.dp else 260.dp
+        Column(Modifier.fillMaxSize().padding(horizontal=20.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            Text("Série ${state.set} de ${state.session.workout.sets} · Repetição ${state.repetition} de ${state.session.workout.blocks.sumOf {it.repetitions}}",
+                Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium)
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center) {
+                Box(Modifier.size(dialSize),contentAlignment=Alignment.Center) {
+                    SecondSweepRing(state,paused,reduceMotion,Modifier.fillMaxSize())
+                    Column(horizontalAlignment=Alignment.CenterHorizontally,modifier=Modifier.clearAndSetSemantics {
+                        contentDescription=(if(paused)"Treino pausado" else when(state.phase) {
+                            Phase.CONTRACT->if(prefs.discreetScreen)"Fase um" else "Contraia"
+                            Phase.RELAX->if(prefs.discreetScreen)"Fase dois" else "Relaxe"
+                            Phase.REST->"Intervalo";Phase.FINISHED->"Concluído"
+                        }) + ", ${state.secondsRemaining} segundos restantes"
+                    }) {
+                        if(!prefs.discreetScreen)Text(if(paused)"Pausado" else when(state.phase) {
+                            Phase.CONTRACT->"Contraia";Phase.RELAX->"Relaxe";Phase.REST->"Descanse";Phase.FINISHED->"Concluído"
+                        },style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.primary)
+                        Text(state.secondsRemaining.toString(),modifier=Modifier.fillMaxWidth().padding(horizontal=24.dp),textAlign=TextAlign.Center,
+                            style=MaterialTheme.typography.headlineLarge.copy(fontSize=64.sp,lineHeight=76.sp,fontFeatureSettings="tnum"),
+                            color=MaterialTheme.colorScheme.primary)
+                        Text("segundos",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                if(!prefs.discreetScreen)Text(when(state.phase) {
+                    Phase.CONTRACT->"Contraia suavemente. Respire normalmente."
+                    Phase.RELAX->"Solte completamente a musculatura."
+                    Phase.REST->"Descanse antes da próxima série."
+                    Phase.FINISHED->"Um cuidado a mais no seu dia."
+                },Modifier.fillMaxWidth(),textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if(message!=null)Copy(message)
+            }
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                Text("Treino completo",style=MaterialTheme.typography.bodySmall)
+                Text("${duration((state.session.workout.durationMillis-state.session.elapsedMillis).coerceAtLeast(0L))} restantes",
+                    style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            LinearProgressIndicator(progress={state.progress},modifier=Modifier.fillMaxWidth().height(4.dp))
+            Primary(if(paused)"Retomar" else "Pausar",pause)
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                TextButton(onClick={options=true},modifier=Modifier.heightIn(min=48.dp)){Text("Opções")}
+                TextButton(onClick=end,modifier=Modifier.heightIn(min=48.dp)){Text("Encerrar")}
             }
         }
-        if(!prefs.discreetScreen)Text(when(state.phase) {
-            Phase.CONTRACT->"Suavemente, sem prender a respiração."
-            Phase.RELAX->"Relaxe completamente."
-            Phase.REST->"Descanse antes da próxima série."
-            Phase.FINISHED->"Um cuidado a mais no seu dia."
-        },Modifier.fillMaxWidth(),textAlign=TextAlign.Center,color=MaterialTheme.colorScheme.onSurfaceVariant)
-        if(message!=null)Copy(message)
-        LinearProgressIndicator(progress={state.progress},modifier=Modifier.fillMaxWidth().height(6.dp))
-        Secondary(if(paused)"Retomar" else "Pausar",pause)
-        TextButton(onClick=end,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text("Encerrar")}
-        Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-            Secondary(if(prefs.discreetScreen)"Tela normal" else "Tela discreta",discreet,Modifier.weight(1f))
-            Secondary("Modo bolso",pocket,Modifier.weight(1f))
-        }
-        if(prefs.guidance==Guidance.VIBRATION)Copy("Você pode bloquear a tela pelo botão do aparelho. O ritmo continua por vibrações.")
     }
 }
+
 @Composable private fun PocketScreen(start:()->Unit,test:()->Unit) {
     ScrollContent {
         Panel(true) {
@@ -541,7 +600,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             "Duas curtas + uma longa" to "Treino concluído").forEach {(a,b)->Panel {Text(a);Copy(b)}}
         Secondary("Experimentar vibrações",test)
         Copy("Inicie e bloqueie a tela pelo botão do aparelho. O app mantém uma notificação discreta com Pausar e Encerrar.")
-        Primary("INICIAR MODO BOLSO",start)
+        Primary("Iniciar modo bolso",start)
     }
 }
 @OptIn(ExperimentalLayoutApi::class)
@@ -563,7 +622,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 FilterChip(selected==value,{selected=value;if(s!=null)feedback(s.id,value)},label={Text(value)})
             }
         }
-        Primary("CONCLUIR",done)
+        Primary("Concluir",done)
     }
 }
 @Composable private fun ProgressScreen(history:List<HistoryEntity>) {
@@ -573,10 +632,10 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     ScrollContent {
         WeekPanel(history)
         Panel {
-            Text("Sequência atual: ${Progress.streak(dates,LocalDate.now())} dias")
-            Text("Treinos no mês: ${history.count {YearMonth.from(LocalDate.parse(it.localDate))==YearMonth.now()}}")
-            Text("Tempo total: ${duration(history.sumOf {it.durationMillis})}")
-            Text("Melhor sequência: ${Progress.bestStreak(dates)} dias")
+            Copy("Sua regularidade")
+            Text("${Progress.streak(dates,LocalDate.now())} dias seguidos",style=MaterialTheme.typography.headlineMedium)
+            Copy("${history.count {YearMonth.from(LocalDate.parse(it.localDate))==YearMonth.now()}} treinos neste mês · ${duration(history.sumOf {it.durationMillis})} no total")
+            Copy("Melhor sequência: ${Progress.bestStreak(dates)} dias")
         }
         Panel {
             Row(verticalAlignment=Alignment.CenterVertically) {
@@ -599,8 +658,24 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 }
             }
         }
+        if(history.isNotEmpty())Panel {
+            Title("Últimas quatro semanas")
+            val monday=LocalDate.now().minusDays((LocalDate.now().dayOfWeek.value-1).toLong())
+            (3 downTo 0).forEach {weeksAgo->
+                val week=monday.minusWeeks(weeksAgo.toLong())
+                val count=(0..6).count {week.plusDays(it.toLong()) in dates}
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                    Copy(if(weeksAgo==0)"Esta semana" else week.format(DateTimeFormatter.ofPattern("dd/MM")))
+                    Text("$count de 7 dias",style=MaterialTheme.typography.bodyMedium)
+                }
+                LinearProgressIndicator(progress={count/7f},modifier=Modifier.fillMaxWidth().height(4.dp))
+            }
+        }
         Title("Histórico")
-        if(history.isEmpty())Copy("Seus treinos concluídos aparecerão aqui.")
+        if(history.isEmpty())Panel {
+            Title("Sua rotina começa com um treino")
+            Copy("Conclua uma sessão para acompanhar seus dias de prática aqui.")
+        }
         history.forEach {h->Panel {
             Text(h.workoutName,fontWeight=FontWeight.SemiBold)
             Copy("${LocalDate.parse(h.localDate).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))} · ${duration(h.durationMillis)} · ${h.contractions} contrações")
@@ -653,7 +728,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     val u=settings.user
     ScrollContent {
         Title("Treino")
-        Secondary("Treino padrão · ${settings.workout.name}",{navigate("programs")})
+        ActionRow("Treino selecionado",settings.workout.name,R.drawable.ic_ui_programs,{navigate("programs")})
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
             Text("Sugerir progressão",Modifier.weight(1f))
             Switch(u.progressionEnabled,{value->update {it.copy(progressionEnabled=value)}},modifier=Modifier.semantics {contentDescription="Sugerir progressão"})
@@ -672,8 +747,8 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
                 Switch(u.discreetScreen,{value->update {it.copy(discreetScreen=value)}},modifier=Modifier.semantics {contentDescription="Tela discreta"})
             }
         }
-        Secondary("Modo bolso",{navigate("pocket")})
-        Secondary("Lembretes",{navigate("reminders")})
+        ActionRow("Modo bolso","Orientação por vibrações",R.drawable.ic_ui_pocket,{navigate("pocket")})
+        ActionRow("Lembretes","Horários e dias da semana",R.drawable.ic_ui_reminders,{navigate("reminders")})
         Title("Aparência")
         Panel {AppTheme.entries.forEach {theme->
             Row(Modifier.fillMaxWidth().heightIn(min=48.dp).selectable(selected=u.theme==theme,role=Role.RadioButton,onClick={update {it.copy(theme=theme)}}),
@@ -684,9 +759,9 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         }}
         Title("Privacidade")
         Copy("Dados armazenados somente neste aparelho. Sem conta, anúncios, sensores externos ou compartilhamento de informações de saúde.")
-        Secondary("Excluir histórico",clear)
+        TextButton(onClick=clear,modifier=Modifier.heightIn(min=48.dp)){Text("Excluir histórico",color=MaterialTheme.colorScheme.error)}
         Title("Sobre")
-        Secondary(stringResource(R.string.manual_entry),{navigate("manual")})
+        ActionRow(stringResource(R.string.manual_entry),"Técnica, demonstrações e cuidados",R.drawable.ic_ui_manual,{navigate("manual")})
         Secondary("Segurança",{info("Interrompa se houver dor ou desconforto persistente. Procure orientação profissional em caso de sintomas urinários, pélvicos ou pós-operatórios. O app não substitui avaliação médica ou fisioterapêutica. No carro, faça o treino apenas parado.")})
         Brand()
         Copy("Versão ${BuildConfig.VERSION_NAME}\nCuidado discreto. No seu ritmo.")

@@ -21,6 +21,8 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
     val reminders=dao.reminders().stateIn(viewModelScope,SharingStarted.Eagerly,emptyList())
     val session=SessionState.state.asStateFlow()
     val message=SessionState.message.asStateFlow()
+    private val feedbackFlow=MutableSharedFlow<String>(extraBufferCapacity=4)
+    val feedbackEvents=feedbackFlow.asSharedFlow()
     init {
         viewModelScope.launch {
             if(SessionState.state.value==null) {
@@ -42,7 +44,11 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
             runCatching {WorkoutService.send(getApplication(),WorkoutService.GUIDANCE)}
                 .onFailure {SessionState.message.value="Reabra a sessão para aplicar a orientação."}
     }}
-    fun selectWorkout(workout:Workout) {viewModelScope.launch {prefs.workout(workout)}}
+    fun selectWorkout(workout:Workout) {viewModelScope.launch {
+        runCatching {prefs.workout(workout)}
+            .onSuccess {feedbackFlow.emit("Treino salvo: ${workout.name}")}
+            .onFailure {feedbackFlow.emit("Não foi possível salvar o treino. Tente novamente.")}
+    }}
     fun start(workout:Workout,pocket:Boolean=false) {viewModelScope.launch {
         if(pocket)lock.withLock {prefs.user(prefs.settings.first().user.copy(guidance=Guidance.VIBRATION,discreetScreen=true))}
         runCatching {WorkoutService.send(getApplication(),WorkoutService.START,workout)}
@@ -64,10 +70,12 @@ class AppViewModel(app:Application):AndroidViewModel(app) {
             scheduler.cancel(r)
             getApplication<Application>().getSystemService(android.app.NotificationManager::class.java).cancel(r.id,200)
         } else {scheduler.cancel(r);scheduler.schedule(r)}
+        feedbackFlow.emit(if(r.enabled)"Lembrete salvo" else "Lembrete desativado")
     }}
     fun removeReminder(r:ReminderEntity) {viewModelScope.launch {
         ReminderScheduler(getApplication()).cancel(r);dao.deleteReminder(r.id)
         getApplication<Application>().getSystemService(android.app.NotificationManager::class.java).cancel(r.id,200)
+        feedbackFlow.emit("Lembrete removido")
     }}
     fun newReminder(hour:Int,minute:Int,mask:Int)=saveReminder(ReminderEntity(UUID.randomUUID().toString(),hour,minute,mask))
 }

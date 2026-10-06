@@ -54,10 +54,7 @@ private val sections=listOf(
     var expanded by rememberSaveable {mutableStateOf<String?>("identify")}
     var references by rememberSaveable {mutableStateOf(false)}
     ScrollContent(gap=16.dp) {
-        Box(Modifier.fillMaxWidth().height(80.dp),contentAlignment=Alignment.Center) {
-            Fig("23:2156","imgRespiro",80.dp,tint=MaterialTheme.colorScheme.primaryContainer)
-            Fig("23:2156","imgCentro",40.dp,tint=MaterialTheme.colorScheme.primary)
-        }
+        Text("Aprenda a técnica",style=MaterialTheme.typography.headlineMedium)
         Copy(stringResource(R.string.manual_intro))
         sections.forEach {section->
             val open=expanded==section.id
@@ -67,7 +64,12 @@ private val sections=listOf(
                 }
                 if(open) {
                     if(section.id in listOf("slow","quick"))ManualAnimation(section.id)
-                    stringArrayResource(section.steps).forEach {Text(it,style=MaterialTheme.typography.bodyMedium)}
+                    stringArrayResource(section.steps).forEachIndexed {index,step->
+                        Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                            Text("${index+1}.",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
+                            Text(step,modifier=Modifier.weight(1f),style=MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                     when(section.id) {
                         "identify"->Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.primaryContainer) {
                             Text(stringResource(R.string.manual_urine_note),Modifier.padding(16.dp),
@@ -101,7 +103,8 @@ private val sections=listOf(
         .semantics(mergeDescendants=true){stateDescription=state},
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
         Text(title,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium)
-        Text(action,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
+        Icon(androidx.compose.ui.res.painterResource(if(expanded)R.drawable.ic_ui_expand_less else R.drawable.ic_ui_expand_more),
+            contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(24.dp))
     }
 }
 

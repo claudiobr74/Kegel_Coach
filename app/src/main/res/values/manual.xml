@@ -2,10 +2,10 @@
   <string name="manual_title">Manual de execução</string>
   <string name="manual_entry">Como fazer os exercícios</string>
   <string name="manual_intro">Aprenda a técnica no seu ritmo. As orientações são educativas e não substituem avaliação individual.</string>
-  <string name="manual_identify">1. Encontre os músculos certos</string>
-  <string name="manual_position">2. Posição</string>
+  <string name="manual_identify">Aprenda a contrair</string>
+  <string name="manual_position">Posição</string>
   <string name="manual_slow">3. Contração lenta</string>
-  <string name="manual_quick">4. Contrações rápidas</string>
+  <string name="manual_quick">Contrações rápidas</string>
   <string name="manual_check">5. Como saber se está correto</string>
   <string name="manual_errors">6. Erros comuns</string>
   <string name="manual_safety">7. Quando procurar orientação</string>

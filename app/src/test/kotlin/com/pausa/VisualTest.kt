@@ -51,24 +51,24 @@ class VisualTest {
             }
         }
         compose.onNodeWithText("COMEÇAR").performScrollTo().performClick()
-        compose.waitUntil(15000){compose.onAllNodesWithText("INICIAR TREINO").fetchSemanticsNodes().isNotEmpty()}
+        compose.waitUntil(15000){compose.onAllNodesWithText("Iniciar treino").fetchSemanticsNodes().isNotEmpty()}
         compose.onNodeWithContentDescription("Kegel Coach").assertIsDisplayed()
         capture("home")
-        compose.onNodeWithText("Personalizar").performClick()
+        compose.onNodeWithText("Personalizar").performScrollTo().performClick()
         capture("custom")
         compose.onNodeWithContentDescription("Voltar").performClick()
-        compose.onNodeWithText("Programas").performClick()
+        compose.onNodeWithText("Treinos").performClick()
         capture("programs")
         compose.onNodeWithText("Progresso").performClick()
         capture("progress")
-        compose.onNodeWithText("Configurações").performClick()
+        compose.onNodeWithText("Ajustes").performClick()
         capture("settings")
         compose.onNodeWithText("Escuro").performScrollTo().performClick()
-        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText("Início").performClick()
         compose.waitUntil(10000) {bitmap().getPixel(4,4)==android.graphics.Color.rgb(17,30,36)}
         compose.onNodeWithContentDescription("Kegel Coach").assertIsDisplayed()
         capture("home-dark")
-        compose.onNodeWithText("Configurações").performClick()
+        compose.onNodeWithText("Ajustes").performClick()
         compose.onNodeWithText("Como fazer os exercícios").performScrollTo().performClick()
         capture("manual-dark")
         compose.onNodeWithTag("manual-section-slow").performScrollTo().performClick()
@@ -79,15 +79,15 @@ class VisualTest {
         }
         capture("manual-slow-dark")
         compose.onNodeWithContentDescription("Voltar").performClick()
-        compose.onAllNodesWithText("Configurações").assertCountEquals(2)
-        compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Modo bolso").performClick()
+        compose.onAllNodesWithText("Ajustes").assertCountEquals(2)
+        compose.onNodeWithText("Início").performClick()
+        compose.onNodeWithText("Modo bolso").performScrollTo().performClick()
         capture("pocket")
         compose.onNodeWithContentDescription("Voltar").performClick()
         var now=0L
         val timer=WorkoutTimer({now},WorkoutSession("visual",WorkoutPreset.beginner,0,0,SessionStatus.RUNNING))
         SessionState.state.value=timer.state()
-        compose.onNodeWithText("VOLTAR AO TREINO").performClick()
+        compose.onNodeWithText("Continuar treino").performClick()
         compose.onNodeWithContentDescription("Contraia, 3 segundos restantes").assertExists()
         capture("session-contract-dark")
         now=3000L

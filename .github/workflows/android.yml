@@ -24,6 +24,7 @@ jobs:
         with:
           name: android-build-and-reports
           path: |
+            app/build/visuals/
             app/build/reports/
             domain/build/reports/
   device:
