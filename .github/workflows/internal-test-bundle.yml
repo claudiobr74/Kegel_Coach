@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release source includes the seamless countdown ring.
+# Release builds include R8 mapping and available native symbols.
 on:
   workflow_dispatch:
   push:
@@ -52,7 +52,7 @@ jobs:
           PY
       - name: Build AAB for local signing
         if: steps.signing.outputs.available != 'true'
-        run: ./gradlew :app:bundleRelease
+        run: ./gradlew :app:bundleRelease :app:assembleRelease --info
       - name: Build signed AAB
         if: steps.signing.outputs.available == 'true'
         env:
@@ -61,13 +61,17 @@ jobs:
           KEGEL_UPLOAD_ALIAS: ${{ secrets.KEGEL_UPLOAD_ALIAS }}
           KEGEL_UPLOAD_KEY_PASSWORD: ${{ secrets.KEGEL_UPLOAD_KEY_PASSWORD }}
         run: |
-          ./gradlew :app:bundleRelease
+          ./gradlew :app:bundleRelease :app:assembleRelease --info
           sha256sum app/build/outputs/bundle/release/app-release.aab
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab
       - uses: actions/upload-artifact@v4
         with:
           name: kegel-coach-internal-test-aab
-          path: app/build/outputs/bundle/release/*.aab
+          path: |
+            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/mapping/release/mapping.txt
+            app/build/outputs/native-debug-symbols/release/*.zip
           retention-days: 14
       - name: Remove temporary key
         if: always()
