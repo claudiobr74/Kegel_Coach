@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -505,14 +506,19 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         val arcSize=androidx.compose.ui.geometry.Size(diameter,diameter)
         val sweep=progress*360f
         val stroke=androidx.compose.ui.graphics.drawscope.Stroke(width=size.minDimension*.06f,cap=StrokeCap.Butt)
-        // Fade the moving tip like the reference, leaving the completed arc opaque.
-        var angle=0f
-        while(angle<sweep) {
-            val segment=minOf(2f,sweep-angle)
-            drawArc(color=color.copy(alpha=((sweep-angle)/43f).coerceIn(0f,1f)),
-                startAngle=-90f+angle,sweepAngle=segment,useCenter=false,
-                topLeft=inset,size=arcSize,style=stroke)
-            angle+=segment
+        // A single gradient stroke keeps the arc smooth without segment seams.
+        if(progress>0f) {
+            if(reduceMotion || state.phase==Phase.FINISHED) {
+                drawCircle(color=color,radius=diameter/2f,style=stroke)
+            } else {
+                val fadeStart=(progress-43f/360f).coerceAtLeast(0f)
+                val brush=Brush.sweepGradient(0f to color,fadeStart to color,
+                    progress to color.copy(alpha=0f),1f to color.copy(alpha=0f),center=center)
+                rotate(-90f) {
+                    drawArc(brush=brush,startAngle=0f,sweepAngle=sweep,useCenter=false,
+                        topLeft=inset,size=arcSize,style=stroke)
+                }
+            }
         }
     }
 }
