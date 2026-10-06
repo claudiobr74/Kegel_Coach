@@ -64,6 +64,26 @@ jobs:
           ./gradlew :app:bundleRelease :app:assembleRelease --info
           sha256sum app/build/outputs/bundle/release/app-release.aab
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab
+      - name: Prepare optimized APK for smoke test
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/smoke.jks" -storepass android -keypass android -alias smoke -dname 'CN=Smoke' -keyalg RSA -validity 2
+          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$APKSIGNER" sign --ks "$RUNNER_TEMP/smoke.jks" --ks-pass pass:android --out "$RUNNER_TEMP/smoke.apk" "$APK"
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Smoke test optimized release
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install "$RUNNER_TEMP/smoke.apk"
+            python3 tools/release_smoke.py
       - uses: actions/upload-artifact@v4
         with:
           name: kegel-coach-internal-test-aab
