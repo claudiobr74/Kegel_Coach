@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release builds include R8 mapping and available native symbols.
+# Optimized release 1.1.1 includes mapping and available native symbols.
 on:
   workflow_dispatch:
   push:
