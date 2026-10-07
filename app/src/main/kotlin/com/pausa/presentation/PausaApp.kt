@@ -40,6 +40,7 @@ import coil.compose.AsyncImage
 import com.pausa.data.*
 import com.pausa.domain.*
 import com.pausa.service.*
+import com.pausa.reminders.domain
 import org.json.JSONObject
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -701,40 +702,75 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     }
 }
 
-@Composable private fun RemindersScreen(reminders:List<ReminderEntity>,permission:()->Unit,
+@OptIn(ExperimentalLayoutApi::class)
+@Composable fun RemindersScreen(reminders:List<ReminderEntity>,permission:()->Unit,
     create:(Int,Int,Int)->Unit,save:(ReminderEntity)->Unit,remove:(ReminderEntity)->Unit) {
     val context=LocalContext.current
+    var editing by rememberSaveable {mutableStateOf(false)}
+    var editingId by rememberSaveable {mutableStateOf<String?>(null)}
+    var hour by rememberSaveable {mutableIntStateOf(8)}
+    var minute by rememberSaveable {mutableIntStateOf(0)}
     var days by rememberSaveable {mutableIntStateOf(127)}
-    fun pickTime(r:ReminderEntity?) {
+    fun edit(r:ReminderEntity?) {
+        editingId=r?.id
+        hour=r?.hour ?: 8
+        minute=r?.minute ?: 0
         days=r?.daysMask ?: 127
-        TimePickerDialog(context,{_,hour,minute->
-            if(r==null)create(hour,minute,days) else save(r.copy(hour=hour,minute=minute))
-            permission()
-        },r?.hour ?: 8,r?.minute ?: 0,true).show()
+        editing=true
     }
+    if(editing)AlertDialog(
+        onDismissRequest={editing=false},
+        title={Title(if(editingId==null)"Novo lembrete" else "Editar lembrete")},
+        text={Column(Modifier.verticalScroll(rememberScrollState())) {
+            Copy("Horário")
+            TextButton({TimePickerDialog(context,{_,h,m->hour=h;minute=m},hour,minute,true).show()}) {
+                Text("%02d:%02d".format(hour,minute),style=MaterialTheme.typography.headlineMedium)
+            }
+            Copy("Dias da semana")
+            FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                dayNames.forEachIndexed {i,label->
+                    FilterChip(days and (1 shl i)!=0,{days=days xor (1 shl i)},
+                        label={Text(label)},modifier=Modifier.sizeIn(minWidth=48.dp,minHeight=48.dp)
+                            .semantics {contentDescription="Dia $label"})
+                }
+            }
+            TextButton({days=127}) {Text("Todos os dias")}
+            TextButton({days=31}) {Text("Segunda a sexta")}
+            TextButton({days=96}) {Text("Sábado e domingo")}
+            if(days==0)Text("Selecione pelo menos um dia.",color=MaterialTheme.colorScheme.error)
+        }},
+        confirmButton={TextButton({
+            val existing=reminders.firstOrNull {it.id==editingId}
+            if(editingId==null)create(hour,minute,days)
+            else if(existing!=null)save(existing.copy(hour=hour,minute=minute,daysMask=days))
+            editing=false
+            if(existing?.enabled!=false)permission()
+        },enabled=days!=0) {Text("Salvar")}},
+        dismissButton={TextButton({editing=false}) {Text("Cancelar")}}
+    )
     ScrollContent {
-        Copy("Vários horários, dias à sua escolha e mensagens discretas.")
+        Copy("Escolha o horário e os dias de cada lembrete.")
         if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)Panel {
             Copy("As notificações precisam de permissão para aparecer.")
             Secondary("Permitir notificações",permission)
         }
-        reminders.forEach {r->Panel {
+        reminders.forEach {r->key(r.id) {Panel {
             Row(verticalAlignment=Alignment.CenterVertically) {
-                TextButton({pickTime(r)},modifier=Modifier.weight(1f)){Text("%02d:%02d".format(r.hour,r.minute),style=MaterialTheme.typography.titleLarge)}
+                TextButton({edit(r)},modifier=Modifier.weight(1f)){Text("%02d:%02d".format(r.hour,r.minute),style=MaterialTheme.typography.titleLarge)}
                 Switch(r.enabled,{save(r.copy(enabled=it));if(it)permission()},modifier=Modifier.semantics {contentDescription="Ativar lembrete %02d:%02d".format(r.hour,r.minute)})
             }
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                dayNames.forEachIndexed {i,label->
-                    val checked=r.daysMask and (1 shl i)!=0
-                    FilterChip(checked,{
-                        val mask=r.daysMask xor (1 shl i)
-                        if(mask!=0)save(r.copy(daysMask=mask))
-                    },label={Text(label)},modifier=Modifier.padding(end=4.dp).sizeIn(minWidth=48.dp,minHeight=48.dp))
-                }
+            Text(if(r.daysMask==127)"Todos os dias" else dayNames.filterIndexed {i,_->r.daysMask and (1 shl i)!=0}.joinToString(" · "))
+            if(r.enabled && r.daysMask and 127 != 0) {
+                val next=r.domain().nextAfter(ZonedDateTime.now())
+                Text("Próximo: "+next.format(DateTimeFormatter.ofPattern("EEE, dd/MM 'às' HH:mm",pt)),
+                    style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            } else Text("Lembrete desativado",style=MaterialTheme.typography.bodySmall)
+            Row {
+                TextButton({edit(r)},Modifier.weight(1f)){Text("Editar horário e dias")}
+                TextButton({remove(r)},Modifier.weight(1f)){Text("Remover")}
             }
-            TextButton({remove(r)},Modifier.fillMaxWidth()){Text("Remover horário")}
-        }}
-        Secondary("+ Adicionar horário",{pickTime(null)})
+        }}}
+        Secondary("+ Adicionar horário",{edit(null)})
         Panel {Copy("Mensagem da notificação");Text(stringResource(R.string.reminder_title))}
         Copy("Os lembretes podem atrasar conforme a economia de bateria do Android. Expanda a notificação para adiar por 10 min, 30 min ou 1 hora.")
     }

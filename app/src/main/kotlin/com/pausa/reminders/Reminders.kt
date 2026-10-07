@@ -28,7 +28,11 @@ class ReminderScheduler(private val context:Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     fun schedule(r:ReminderEntity) {
         alarm.cancel(pending(r))
-        if(r.enabled) alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+        if(!r.enabled || r.daysMask and 127 == 0) {
+            cancel(r)
+            return
+        }
+        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
             r.domain().nextAfter(ZonedDateTime.now()).toInstant().toEpochMilli(),pending(r))
     }
     fun cancel(r:ReminderEntity) {alarm.cancel(pending(r));alarm.cancel(pending(r,true))}

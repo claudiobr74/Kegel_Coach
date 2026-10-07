@@ -1,9 +1,9 @@
 name: Internal test bundle
-# Release 1.1.4: correct launcher name and consistent training reminder.
+# Release 1.1.5: atomic reminder editing and reliable weekday selection.
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/monogram-startup]
+    branches: [main, feat/monogram-startup, fix/reminder-weekdays-1.1.5]
     paths: ['.github/workflows/internal-test-bundle.yml']
 permissions:
   contents: read
