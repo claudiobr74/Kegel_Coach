@@ -41,4 +41,31 @@ class ReminderTest {
     @Test(expected=IllegalArgumentException::class) fun unsupportedDelayIsRejected() {
         ReminderScheduler(ApplicationProvider.getApplicationContext()).snooze(ReminderEntity("r",8,0),5)
     }
+    @Test fun everyWeekdayMaskSchedulesOnlySelectedDaysInLocalTime() {
+        val now=java.time.ZonedDateTime.of(2026,10,7,9,0,0,0,java.time.ZoneId.of("America/Sao_Paulo"))
+        for(mask in 1..127) {
+            val r=ReminderEntity("mask-$mask",8,30,mask).domain()
+            val next=r.nextAfter(now)
+            assertTrue(next.isAfter(now))
+            assertTrue(mask and (1 shl (next.dayOfWeek.value-1))!=0)
+            assertEquals(8,next.hour)
+            assertEquals(30,next.minute)
+            assertEquals(now.zone,next.zone)
+            val earlier=(0..7).map {now.toLocalDate().plusDays(it.toLong()).atTime(8,30).atZone(now.zone)}
+                .filter {it.isAfter(now) && mask and (1 shl (it.dayOfWeek.value-1))!=0}.first()
+            assertEquals(earlier,next)
+        }
+    }
+    @Test fun disablingOrClearingDaysCancelsDailyAndSnoozedAlarms() {
+        val context=ApplicationProvider.getApplicationContext<Context>()
+        val scheduler=ReminderScheduler(context)
+        val r=ReminderEntity("cancel-all",8,30,127)
+        val alarms=shadowOf(context.getSystemService(AlarmManager::class.java))
+        scheduler.schedule(r);scheduler.snooze(r,10)
+        scheduler.schedule(r.copy(enabled=false))
+        assertTrue(alarms.scheduledAlarms.isEmpty())
+        scheduler.schedule(r);scheduler.snooze(r,30)
+        scheduler.schedule(r.copy(daysMask=0))
+        assertTrue(alarms.scheduledAlarms.isEmpty())
+    }
 }

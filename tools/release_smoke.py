@@ -21,7 +21,7 @@ def tap(label):
         node = next((n for n in nodes if n.get("text") == label or n.get("content-desc") == label), None)
         if node is not None:
             break
-        adb("shell", "input", "swipe", "160", "540", "160", "200", "350")
+        adb("shell", "input", "swipe", "160", "480", "160", "200", "350")
         time.sleep(1)
     assert node is not None, f"Missing navigation: {label}: {ET.tostring(screen(), encoding='unicode')}"
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds")))
@@ -29,6 +29,7 @@ def tap(label):
     time.sleep(2)
     assert adb("shell", "pidof", PACKAGE).strip(), f"App exited after {label}"
 
+adb("shell", "pm", "grant", PACKAGE, "android.permission.POST_NOTIFICATIONS")
 adb("logcat", "-c")
 adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
 time.sleep(5)
@@ -36,6 +37,21 @@ for label in ["Continuar", "Continuar", "Continuar", "COMEÇAR"]:
     tap(label)
 for label in ["Treinos", "Progresso", "Ajustes", "Início"]:
     tap(label)
+# Save chosen days and confirm them after reopening the optimized app.
+for label in ["Ajustes", "Lembretes", "+ Adicionar horário", "Sábado e domingo", "Salvar"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+for label in ["Editar horário e dias", "Dia SEG", "Cancelar"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+adb("shell", "am", "force-stop", PACKAGE)
+adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
+time.sleep(5)
+for label in ["Ajustes", "Lembretes"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+tap("Remover")
+assert not any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
 logs = adb("logcat", "-d", "-b", "crash")
 assert "FATAL EXCEPTION" not in logs, logs
 print("Optimized release navigation PASS")

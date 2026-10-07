@@ -11,8 +11,8 @@ android {
         applicationId = "com.kegel_coach.myapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.1.4"
+        versionCode = 11
+        versionName = "1.1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     val uploadStore = providers.environmentVariable("KEGEL_UPLOAD_STORE")
