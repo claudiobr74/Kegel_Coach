@@ -29,6 +29,7 @@ def tap(label):
     time.sleep(2)
     assert adb("shell", "pidof", PACKAGE).strip(), f"App exited after {label}"
 
+adb("shell", "pm", "grant", PACKAGE, "android.permission.POST_NOTIFICATIONS")
 adb("logcat", "-c")
 adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
 time.sleep(5)

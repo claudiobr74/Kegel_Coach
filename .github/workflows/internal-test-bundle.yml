@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.5: verify reminder editing, persisted days and optimized navigation.
+# Release 1.1.5: reminder editing and persistence with notification permission.
 on:
   workflow_dispatch:
   push:
