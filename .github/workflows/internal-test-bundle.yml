@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.5: reminder editing and persistence with notification permission.
+# Release 1.1.5: verify reminder persistence on compact emulator screens.
 on:
   workflow_dispatch:
   push:

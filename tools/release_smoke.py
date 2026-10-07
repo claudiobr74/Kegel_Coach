@@ -21,7 +21,7 @@ def tap(label):
         node = next((n for n in nodes if n.get("text") == label or n.get("content-desc") == label), None)
         if node is not None:
             break
-        adb("shell", "input", "swipe", "160", "540", "160", "200", "350")
+        adb("shell", "input", "swipe", "160", "480", "160", "200", "350")
         time.sleep(1)
     assert node is not None, f"Missing navigation: {label}: {ET.tostring(screen(), encoding='unicode')}"
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", node.get("bounds")))
