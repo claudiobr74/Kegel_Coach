@@ -39,7 +39,7 @@ class ReminderScheduler(private val context:Context) {
     fun notify(r:ReminderEntity) {
         if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return
         val manager=context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel("reminders","Pausas diárias",NotificationManager.IMPORTANCE_DEFAULT).apply {lockscreenVisibility=Notification.VISIBILITY_PRIVATE})
+        manager.createNotificationChannel(NotificationChannel("reminders","Lembretes de treino",NotificationManager.IMPORTANCE_DEFAULT).apply {lockscreenVisibility=Notification.VISIBILITY_PRIVATE})
         val start=PendingIntent.getActivity(context,0,Intent(context,MainActivity::class.java).setAction("reminder-start"),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val expanded=RemoteViews(context.packageName,R.layout.reminder_notification)
@@ -48,10 +48,10 @@ class ReminderScheduler(private val context:Context) {
         expanded.setOnClickPendingIntent(R.id.snooze30,pending(r,minutes=30))
         expanded.setOnClickPendingIntent(R.id.snooze60,pending(r,minutes=60))
         val notification=NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Pausa").setContentText("Hora de uma pausa rápida").setContentIntent(start)
+            .setContentTitle(context.getString(R.string.app_name)).setContentText(context.getString(R.string.reminder_title)).setContentIntent(start)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setAutoCancel(true)
             .setPublicVersion(NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle("Pausa").setContentText("Hora de uma pausa rápida").build())
+                .setContentTitle(context.getString(R.string.app_name)).setContentText(context.getString(R.string.reminder_title)).build())
             .setStyle(NotificationCompat.DecoratedCustomViewStyle()).setCustomBigContentView(expanded)
             .addAction(0,"Iniciar",start).addAction(0,"Adiar 10 min",pending(r,minutes=10)).build()
         manager.notify(r.id,200,notification)

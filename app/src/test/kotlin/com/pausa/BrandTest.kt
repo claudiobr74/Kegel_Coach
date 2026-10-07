@@ -21,8 +21,9 @@ class BrandTest {
     @Test fun installedLauncherUsesAdaptiveIconAndCorrectVersion() {
         val context=ApplicationProvider.getApplicationContext<Context>()
         assertTrue(context.getDrawable(R.mipmap.ic_launcher) is AdaptiveIconDrawable)
-        assertEquals("1.1.3",BuildConfig.VERSION_NAME)
-        assertEquals(9,BuildConfig.VERSION_CODE)
+        assertEquals("Kegel Coach",context.applicationInfo.loadLabel(context.packageManager).toString())
+        assertEquals("1.1.4",BuildConfig.VERSION_NAME)
+        assertEquals(10,BuildConfig.VERSION_CODE)
         assertNotNull(context.getDrawable(R.drawable.ic_notification))
         val canvasBitmap=Bitmap.createBitmap(432,432,Bitmap.Config.ARGB_8888)
         context.getDrawable(R.mipmap.ic_launcher)!!.apply {setBounds(0,0,432,432);draw(Canvas(canvasBitmap))}

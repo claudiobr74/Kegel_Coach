@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.3: visible phase labels and one ring revolution per phase.
+# Release 1.1.4: correct launcher name and consistent training reminder.
 on:
   workflow_dispatch:
   push:

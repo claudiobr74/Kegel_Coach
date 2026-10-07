@@ -735,7 +735,7 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
             TextButton({remove(r)},Modifier.fillMaxWidth()){Text("Remover horário")}
         }}
         Secondary("+ Adicionar horário",{pickTime(null)})
-        Panel {Copy("Mensagem da notificação");Text("Hora de uma pausa rápida")}
+        Panel {Copy("Mensagem da notificação");Text(stringResource(R.string.reminder_title))}
         Copy("Os lembretes podem atrasar conforme a economia de bateria do Android. Expanda a notificação para adiar por 10 min, 30 min ou 1 hora.")
     }
 }
