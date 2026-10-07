@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.5: atomic reminder editing and reliable weekday selection.
+# Release 1.1.5: verify reminder editing, persisted days and optimized navigation.
 on:
   workflow_dispatch:
   push:

@@ -36,6 +36,21 @@ for label in ["Continuar", "Continuar", "Continuar", "COMEÇAR"]:
     tap(label)
 for label in ["Treinos", "Progresso", "Ajustes", "Início"]:
     tap(label)
+# Save chosen days and confirm them after reopening the optimized app.
+for label in ["Ajustes", "Lembretes", "+ Adicionar horário", "Sábado e domingo", "Salvar"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+for label in ["Editar horário e dias", "Dia SEG", "Cancelar"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+adb("shell", "am", "force-stop", PACKAGE)
+adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
+time.sleep(5)
+for label in ["Ajustes", "Lembretes"]:
+    tap(label)
+assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+tap("Remover")
+assert not any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
 logs = adb("logcat", "-d", "-b", "crash")
 assert "FATAL EXCEPTION" not in logs, logs
 print("Optimized release navigation PASS")
