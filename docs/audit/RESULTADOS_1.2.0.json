@@ -1,0 +1,165 @@
+{
+  "date": "2026-10-08",
+  "version": "1.2.0",
+  "versionCode": 13,
+  "branch": "feat/professional-1.2.0",
+  "baseCommit": "f9b59103c3957255e2eceacf528957e108057230",
+  "build": {
+    "result": "BUILD SUCCESSFUL",
+    "targets": [
+      ":domain:test",
+      ":app:testDebugUnitTest",
+      ":app:lintRelease",
+      ":app:assembleRelease",
+      ":app:assembleDebugAndroidTest"
+    ],
+    "gradle": "8.11.1",
+    "java": "17",
+    "compileSdk": 36,
+    "tasks": 119
+  },
+  "tests": {
+    "domain": {
+      "totals": {
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "suite": "com.pausa.domain.CueContinuityTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.domain.ManualDemoTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.domain.WorkoutTest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    "android_unit": {
+      "totals": {
+        "tests": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "suites": [
+        {
+          "suite": "com.pausa.BrandTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.ManualTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.ProfessionalUxTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.ReminderEditorTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.UxTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.VisualTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.data.BackupTest",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.data.MigrationTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.data.PersistenceTest",
+          "tests": 8,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.reminders.ReminderTest",
+          "tests": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "suite": "com.pausa.service.HapticGuidanceTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "releaseApk": {
+    "signed": false,
+    "bytes": 13622062,
+    "sha256": "eadec30bfe3d175545152de10f82111e6d1b624e4ad3c26331e21521e8df2aee",
+    "zipIntegrity": "passed"
+  },
+  "instrumentation": {
+    "compiled": true,
+    "executed": false
+  },
+  "publication": {
+    "pushed": false,
+    "mergedToMain": false,
+    "signedAabGenerated": false
+  },
+  "limitations": [
+    "No physical-device or emulator execution in this environment.",
+    "Clinical exercise guidance has not received an independent professional review.",
+    "Native libraries packaged without symbol stripping in this local SDK setup."
+  ]
+}

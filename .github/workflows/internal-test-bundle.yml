@@ -1,9 +1,9 @@
 name: Internal test bundle
-# Release 1.1.6: verify saved 24-hour time after emulator launcher recovery.
+# Release 1.2.0: validate data continuity, notification diagnostics and optimized flows.
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/monogram-startup, fix/reminder-weekdays-1.1.5, fix/reminder-time-1.1.6]
+    branches: [main, feat/monogram-startup, fix/reminder-weekdays-1.1.5, fix/reminder-time-1.1.6, feat/professional-1.2.0]
     paths: ['.github/workflows/internal-test-bundle.yml']
 permissions:
   contents: read

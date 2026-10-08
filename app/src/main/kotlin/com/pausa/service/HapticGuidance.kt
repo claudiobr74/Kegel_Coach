@@ -11,6 +11,7 @@ internal class HapticGuidance(context: Context) {
         context.getSystemService(VibratorManager::class.java)?.defaultVibrator
     else context.getSystemService(Vibrator::class.java)
 
+    fun available():Boolean = vibrator?.hasVibrator()==true
     fun play(phase: Phase): Boolean = play(pattern(phase))
     @Suppress("DEPRECATION")
     fun play(pattern: LongArray): Boolean {

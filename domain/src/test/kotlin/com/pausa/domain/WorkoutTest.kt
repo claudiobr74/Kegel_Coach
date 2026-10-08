@@ -70,6 +70,10 @@ class WorkoutTest {
         assertEquals(WorkoutBlock(4,6,10),ProgressionPlan.suggestion(0,7))
         assertNull(ProgressionPlan.suggestion(3,7))
     }
+    @Test fun recentDifficultyPreventsProgressionSuggestion() {
+        assertNull(ProgressionPlan.suggestion(0,7,tolerated=false))
+        assertNotNull(ProgressionPlan.suggestion(0,7,tolerated=true))
+    }
     @Test fun streakDeduplicatesDaysAndAllowsTodayPending() {
         val today=LocalDate.of(2026,10,5)
         val dates=setOf(today.minusDays(1),today.minusDays(2),today.minusDays(4))

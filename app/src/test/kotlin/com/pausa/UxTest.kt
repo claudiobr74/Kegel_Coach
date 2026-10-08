@@ -49,21 +49,23 @@ class UxTest {
             Surface(Modifier.fillMaxSize()) {CustomWorkout(WorkoutPreset.beginner,{saved=it},{})}
         }}
         compose.onNodeWithText("3 s").performScrollTo().performClick()
-        compose.onNode(hasSetTextAction()).performTextReplacement("99")
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(isDialog())).performTextReplacement("99")
         compose.onNodeWithText("Aplicar").assertIsNotEnabled()
-        compose.onNode(hasSetTextAction()).performTextReplacement("7")
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(isDialog())).performTextReplacement("7")
         compose.onNodeWithText("Aplicar").performClick()
-        compose.onNodeWithText("Salvar treino").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Salvar treino").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithText("Revisei os valores e sigo orientação individual.").performScrollTo().performClick()
+        compose.onNodeWithText("Salvar treino").assertIsEnabled().performClick()
         assertEquals(7,saved!!.blocks.first().contractSeconds)
     }
 
     @Test fun compactLargeFontKeepsPauseAndEndAccessible() {
         val session=WorkoutSession("ux-large",WorkoutPreset.beginner,0,0,SessionStatus.PAUSED)
         val state=WorkoutTimer({0L},session).state()
-        var pauses=0
+        var pauses=0;var screenChoices=0
         compose.setContent {CompositionLocalProvider(LocalDensity provides Density(2f,1.6f)) {
             PausaTheme(AppTheme.DARK) {Surface(Modifier.fillMaxSize()) {
-                SessionScreen(state,UserPreferences(),null,{pauses++},{},{},{})
+                SessionScreen(state,UserPreferences(),null,{pauses++},{},{},{},{screenChoices++})
             }}
         }}
         compose.onNodeWithText("Retomar").assertIsDisplayed().performClick()
@@ -71,6 +73,8 @@ class UxTest {
         compose.onNodeWithText("Encerrar").assertIsDisplayed()
         compose.onNodeWithText("Opções").performClick()
         compose.onNodeWithText("Modo bolso").assertExists()
+        compose.onNodeWithText("Orientação por tela").performScrollTo().performClick()
+        assertEquals(1,screenChoices)
     }
     @Test fun discreetWorkoutStillShowsContractAndRelaxBesideCountdown() {
         val session=WorkoutSession("phase-labels",WorkoutPreset.beginner,0,0,SessionStatus.RUNNING)

@@ -48,19 +48,19 @@ import kotlinx.coroutines.flow.first
     LaunchedEffect(Unit) {
         if(motionEnabled) {
             coroutineScope {
-                launch {opacity.animateTo(1f,tween(400))}
+                launch {opacity.animateTo(1f,tween(120))}
                 scale.animateTo(1f,tween(400, easing=FastOutSlowInEasing))
             }
             coroutineScope {
-                launch {nameOpacity.animateTo(1f,tween(400))}
-                scale.animateTo(.97f,tween(700, easing=FastOutSlowInEasing))
-                scale.animateTo(1f,tween(700, easing=FastOutSlowInEasing))
+                launch {nameOpacity.animateTo(1f,tween(120))}
+                scale.animateTo(.97f,tween(100, easing=FastOutSlowInEasing))
+                scale.animateTo(1f,tween(100, easing=FastOutSlowInEasing))
             }
         } else {
             opacity.snapTo(1f);nameOpacity.snapTo(1f);scale.snapTo(1f)
         }
         snapshotFlow {isReady}.first {it}
-        if(motionEnabled) opacity.animateTo(0f,tween(400))
+        if(motionEnabled) opacity.animateTo(0f,tween(120))
         finished()
     }
     Box(Modifier.fillMaxSize().safeDrawingPadding().clearAndSetSemantics {

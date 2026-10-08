@@ -1,3 +1,21 @@
+# Validação da evolução 1.2.0 (13)
+
+Estado: **validação local aprovada** na branch `feat/professional-1.2.0`; envio público e integração à main aguardam autorização.
+
+- **56/56 testes aprovados**, sem falhas, erros ou testes ignorados: 16 do domínio e 40 Android locais.
+- **Lint release: zero erros e zero avisos.**
+- Migração Room, cópias protegidas, treinos mistos, pausa, lembretes, retorno de navegação e retomada da etapa verificados.
+- Build completo de 119 tarefas aprovado; APK release otimizado com R8 e instrumentação compilados.
+- Capturas nativas inspecionadas em temas claro/escuro e fluxos principais; fonte ampliada coberta por testes.
+- APK local sem assinatura; integridade ZIP aprovada. AAB assinado e execução em emuladores/aparelhos pendentes.
+- Revisão clínica independente pendente.
+
+Detalhes: [implementação](docs/audit/IMPLEMENTACAO_1.2.0.md) e [resultados estruturados](docs/audit/RESULTADOS_1.2.0.json).
+
+Os resultados abaixo pertencem a versões anteriores.
+
+---
+
 # Validação · 5 de outubro de 2026
 
 ## Atualização 1.0.2 — marca e auditoria

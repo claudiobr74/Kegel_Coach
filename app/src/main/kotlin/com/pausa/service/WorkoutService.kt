@@ -5,6 +5,8 @@ import android.content.*
 import android.content.pm.ServiceInfo
 import android.media.*
 import android.os.*
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -22,6 +24,7 @@ import java.util.UUID
 object SessionState {
     val state = MutableStateFlow<TimerState?>(null)
     val message = MutableStateFlow<String?>(null)
+    val options = MutableStateFlow<UserPreferences?>(null)
     var serviceAlive = false
 }
 
@@ -40,6 +43,9 @@ class WorkoutService : Service() {
     private var programWeek = -1
     private var lastCheckpoint: WorkoutSession? = null
     private var tone: ToneGenerator? = null
+    private var speech: TextToSpeech? = null
+    private var speechReady = false
+    private var audioFocus: AudioFocusRequest? = null
     private var lastObserved: TimerState? = null
     private var lastObservedAt = 0L
 
@@ -71,6 +77,7 @@ class WorkoutService : Service() {
     private suspend fun handle(intent:Intent) {
         val previousGuidance = settings.user.guidance
         settings = PreferencesRepository(this).settings.first()
+        SessionState.options.value?.let { settings=settings.copy(user=it) }
         when(intent.action) {
             START -> {
                 if(timer != null) return
@@ -81,6 +88,10 @@ class WorkoutService : Service() {
                     publish(); return
                 }
                 val workout=Codec.workout(JSONObject(intent.getStringExtra("workout") ?: return))
+                SessionState.options.value=PreferencesRepository(this).settings.first().user.let {
+                    if(intent.getBooleanExtra("pocket",false))it.copy(guidance=Guidance.VIBRATION,discreetScreen=true) else it
+                }
+                settings=settings.copy(user=SessionState.options.value!!)
                 programWeek=if(workout.id=="program") settings.progressionWeek else -1
                 timer=WorkoutTimer({SystemClock.elapsedRealtime()},WorkoutSession(UUID.randomUUID().toString(),workout,System.currentTimeMillis(),0,SessionStatus.RUNNING))
                 checkpoint(); begin()
@@ -103,19 +114,32 @@ class WorkoutService : Service() {
                     timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
                     SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
                 } else timer?.pause()
-                releaseWake();haptics.cancel();tone?.stopTone()
+                releaseWake();releaseAudioFocus();haptics.cancel();tone?.stopTone();speech?.stop()
                 val state=timer?.state()
                 if(state?.session?.status==SessionStatus.COMPLETED)finish(state) else {checkpoint();publish()}
             }
             CANCEL -> {
-                ticker?.cancel();timer?.cancel();releaseWake();haptics.cancel();tone?.stopTone()
-                dao.deleteActive();SessionState.state.value=null
+                ticker?.cancel();timer?.cancel();releaseWake();releaseAudioFocus();haptics.cancel();tone?.stopTone();speech?.stop()
+                dao.deleteActive();SessionState.state.value=null;SessionState.options.value=null
                 stopForeground(STOP_FOREGROUND_REMOVE);stopSelf()
             }
             GUIDANCE -> {
+                val user=settings.user
+                settings=settings.copy(user=user.copy(
+                    guidance=intent.getStringExtra("guidance")?.let {Guidance.valueOf(it)} ?: user.guidance,
+                    discreetScreen=if(intent.hasExtra("discreet"))intent.getBooleanExtra("discreet",false) else user.discreetScreen))
+                SessionState.options.value=settings.user
+                checkpoint()
                 if (previousGuidance != settings.user.guidance) {
-                    haptics.cancel(); tone?.stopTone()
+                    haptics.cancel(); tone?.stopTone(); speech?.stop()
                     val current = timer?.state()
+                    releaseAudioFocus()
+                    if(current?.session?.status==SessionStatus.RUNNING && !requestAudioFocus()) {
+                        ticker?.cancel();timer?.pause();releaseWake();checkpoint();publish()
+                        SessionState.message.value="O áudio está indisponível. Retome ou escolha orientação por tela."
+                        return
+                    }
+                    prepareSpeech()
                     if (HapticGuidance.changedDuringRunning(previousGuidance, settings.user.guidance, current?.session?.status))
                         current?.let { cue(it.phase) }
                 }
@@ -126,24 +150,34 @@ class WorkoutService : Service() {
     private suspend fun restore(active:ActiveSessionEntity):Boolean {
         val decoded=runCatching {Codec.recoverableSession(active.payload)}.getOrNull()
         if(decoded==null) {
-            dao.deleteActive();SessionState.state.value=null
+            dao.deleteActive();SessionState.state.value=null;SessionState.options.value=null
             SessionState.message.value="A sessão salva não pôde ser recuperada. Inicie um novo treino."
             stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false
         }
-        programWeek=JSONObject(active.payload).optInt("week",-1)
+        val json=JSONObject(active.payload)
+        programWeek=json.optInt("week",-1)
+        SessionState.options.value=settings.user.copy(
+            guidance=runCatching {Guidance.valueOf(json.optString("guidance",settings.user.guidance.name))}.getOrDefault(settings.user.guidance),
+            discreetScreen=json.optBoolean("discreet",settings.user.discreetScreen))
+        settings=settings.copy(user=SessionState.options.value!!)
         timer=WorkoutTimer({SystemClock.elapsedRealtime()},decoded.copy(status=SessionStatus.PAUSED))
         return true
     }
     private suspend fun checkpoint() {
         timer?.state()?.session?.let {
-            dao.saveActive(ActiveSessionEntity(payload=Codec.session(it,programWeek)))
+            dao.saveActive(ActiveSessionEntity(payload=JSONObject(Codec.session(it,programWeek)).put("guidance",settings.user.guidance.name).put("discreet",settings.user.discreetScreen).toString()))
             lastCheckpoint=it
         }
     }
-    private fun begin() {
+    private suspend fun begin() {
         ticker?.cancel(); SessionState.message.value=null
         val initial=timer?.state() ?: return
         if(initial.session.status!=SessionStatus.RUNNING) {publish();return}
+        if(!requestAudioFocus()) {
+            timer?.pause();checkpoint();publish()
+            SessionState.message.value="O áudio está indisponível. Retome ou escolha orientação por tela."
+            return
+        }
         val pm=getSystemService(PowerManager::class.java)
         releaseWake()
         wakeLock=pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"pausa:session").apply {
@@ -151,6 +185,7 @@ class WorkoutService : Service() {
             acquire(initial.session.workout.durationMillis-initial.session.elapsedMillis+60_000)
         }
         lastObserved=initial;lastObservedAt=SystemClock.elapsedRealtime()
+        prepareSpeech()
         cue(initial.phase)
         ticker=scope.launch {
             var previous=initial
@@ -163,7 +198,7 @@ class WorkoutService : Service() {
                 val current=timer?.state() ?: break
                 if(CueContinuity.interrupted(lastTick,now,previous.phaseIndex,current.phaseIndex)) {
                     timer=WorkoutTimer({SystemClock.elapsedRealtime()},previous.session.copy(status=SessionStatus.PAUSED))
-                    releaseWake();haptics.cancel()
+                    releaseWake();releaseAudioFocus();haptics.cancel();tone?.stopTone();speech?.stop()
                     SessionState.message.value="O ritmo foi interrompido. Retome para continuar com segurança."
                     checkpoint();publish();break
                 }
@@ -190,9 +225,43 @@ class WorkoutService : Service() {
         SessionState.state.value=state
         getSystemService(NotificationManager::class.java).notify(NOTIFICATION,notification(state?.session?.status==SessionStatus.PAUSED))
     }
+    private fun requestAudioFocus():Boolean {
+        if(settings.user.guidance !in listOf(Guidance.SOUND,Guidance.VOICE))return true
+        if(audioFocus!=null)return true
+        val manager=getSystemService(AudioManager::class.java)
+        val request=AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            .setOnAudioFocusChangeListener {change->
+                if(change in listOf(AudioManager.AUDIOFOCUS_LOSS,AudioManager.AUDIOFOCUS_LOSS_TRANSIENT))
+                    commands.trySend(Intent().setAction(PAUSE))
+            }.build()
+        if(manager.requestAudioFocus(request)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED)return false
+        audioFocus=request
+        return true
+    }
+    private fun releaseAudioFocus() {
+        audioFocus?.let {getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it)}
+        audioFocus=null
+    }
+    private fun prepareSpeech() {
+        if(settings.user.guidance!=Guidance.VOICE || speech!=null)return
+        speech=TextToSpeech(this) {status ->
+            if(status==TextToSpeech.SUCCESS) {
+                val offline=speech?.voices?.firstOrNull {it.locale.language=="pt" && !it.isNetworkConnectionRequired}
+                if(offline!=null) {speech?.voice=offline;speechReady=true}
+                else SessionState.message.value="Voz em português offline indisponível. O treino usará sinais sonoros."
+            } else SessionState.message.value="Voz indisponível. O treino usará sinais sonoros."
+        }
+    }
     private fun cue(phase:Phase) {
         if(settings.user.guidance in listOf(Guidance.VIBRATION,Guidance.BOTH)) haptics.play(phase)
-        if(settings.user.guidance==Guidance.SOUND) {
+        if(settings.user.guidance==Guidance.VOICE && speechReady) {
+            speech?.speak(when(phase) {
+                Phase.CONTRACT->"Contrair";Phase.RELAX->"Relaxar";Phase.REST->"Descanse";Phase.FINISHED->"Treino concluído"
+            },TextToSpeech.QUEUE_FLUSH,null,"phase")
+        }
+        if(settings.user.guidance==Guidance.SOUND || (settings.user.guidance==Guidance.VOICE && !speechReady)) {
             if(tone==null) tone=ToneGenerator(AudioManager.STREAM_MUSIC,35)
             tone?.startTone(when(phase) {
                 Phase.CONTRACT->ToneGenerator.TONE_PROP_BEEP
@@ -223,6 +292,10 @@ class WorkoutService : Service() {
             }
         }
         releaseWake();scope.cancel();commands.close()
+        if(SessionState.state.value?.session?.status==SessionStatus.COMPLETED)
+            Handler(Looper.getMainLooper()).postDelayed({releaseAudioFocus()},2000) else releaseAudioFocus()
+        speech?.let { if(SessionState.state.value?.session?.status==SessionStatus.COMPLETED)
+            Handler(Looper.getMainLooper()).postDelayed({it.shutdown()},2000) else it.shutdown() }
         if(SessionState.state.value?.session?.status!=SessionStatus.COMPLETED)haptics.cancel()
         tone?.let {
             if(SessionState.state.value?.session?.status==SessionStatus.COMPLETED)
@@ -235,8 +308,10 @@ class WorkoutService : Service() {
         const val START="com.pausa.START";const val PAUSE="com.pausa.PAUSE";const val RESUME="com.pausa.RESUME"
         const val CANCEL="com.pausa.CANCEL";const val GUIDANCE="com.pausa.GUIDANCE"
         private const val CHANNEL="session";private const val NOTIFICATION=100
-        fun send(context:Context,action:String,workout:Workout?=null) {
+        fun send(context:Context,action:String,workout:Workout?=null,pocket:Boolean=false,options:UserPreferences?=null) {
             val intent=Intent(context,WorkoutService::class.java).setAction(action)
+            intent.putExtra("pocket",pocket)
+            options?.let {intent.putExtra("guidance",it.guidance.name);intent.putExtra("discreet",it.discreetScreen)}
             if(workout!=null)intent.putExtra("workout",Codec.workout(workout).toString())
             ContextCompat.startForegroundService(context,intent)
         }

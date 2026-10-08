@@ -1,3 +1,16 @@
+# 1.2.0 (13) — evolução profissional
+
+- Correção da orientação de pausa e tela ativa durante o treino visual.
+- Opções de modo bolso, tela discreta e orientação por tela limitadas à sessão; preferências preservadas.
+- Diagnóstico de notificações, teste de aviso, salvamento com retorno e adiamento persistido.
+- Navegação com retorno à origem, confirmação de descarte e início mais compacto.
+- Biblioteca de treinos nomeados e editor de dois blocos.
+- Calendário consultável, filtro por mês e lista de histórico com itens visíveis.
+- Cópia/restauração protegida por senha (AES-GCM), com validação e confirmação.
+- Preparação opcional de 3 segundos e instruções por voz offline, com alternativa sonora.
+- Progressão explícita que considera relatos recentes; retomada preserva os dias contabilizados; aviso em personalizações extensas.
+- Migração do banco 1→2, testes de dados e ampliação dos percursos de validação.
+
 # Changelog
 
 ## 1.0.2 — nova marca e auditoria

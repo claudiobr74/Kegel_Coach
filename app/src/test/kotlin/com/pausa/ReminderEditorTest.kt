@@ -69,7 +69,7 @@ class ReminderEditorTest {
         compose.onNodeWithText("Editar horário e dias").performScrollTo().performClick()
         compose.onNodeWithTag("reminder-hour").performTextReplacement("08")
         compose.onNodeWithTag("reminder-minute").performTextReplacement("00")
-        compose.onNodeWithText("O aviso será às 08:00").assertExists()
+        compose.onNodeWithText("Horário escolhido: 08:00").assertExists()
         compose.onNodeWithText("Salvar").performClick()
         assertEquals(8,saved.single().hour)
         assertEquals(0,saved.single().minute)

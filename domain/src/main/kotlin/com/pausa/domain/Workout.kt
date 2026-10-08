@@ -96,14 +96,14 @@ data class Reminder(val id: String, val hour: Int, val minute: Int, val days: Se
         (0..7).map { now.toLocalDate().plusDays(it.toLong()).atTime(hour, minute).atZone(now.zone) }
             .first { it.dayOfWeek in days && it.isAfter(now) }
 }
-enum class Guidance { SCREEN, VIBRATION, BOTH, SOUND }
+enum class Guidance { SCREEN, VIBRATION, BOTH, SOUND, VOICE }
 enum class AppTheme { SYSTEM, LIGHT, DARK }
 data class UserPreferences(val onboardingDone: Boolean = false, val guidance: Guidance = Guidance.BOTH,
-    val discreetScreen: Boolean = false, val theme: AppTheme = AppTheme.SYSTEM, val progressionEnabled: Boolean = true)
+    val discreetScreen: Boolean = false, val theme: AppTheme = AppTheme.SYSTEM, val progressionEnabled: Boolean = true, val preparationEnabled: Boolean = false)
 object ProgressionPlan {
     val weeks = listOf(WorkoutBlock(3,6,10), WorkoutBlock(4,6,10), WorkoutBlock(5,5,10), WorkoutBlock(6,6,10))
-    fun suggestion(week: Int, completionsThisWeek: Int): WorkoutBlock? =
-        if (completionsThisWeek >= 7 && week in 0..2) weeks[week + 1] else null
+    fun suggestion(week: Int, completionsThisWeek: Int, tolerated: Boolean = true): WorkoutBlock? =
+        if (tolerated && completionsThisWeek >= 7 && week in 0..2) weeks[week + 1] else null
 }
 object Progress {
     fun streak(dates: Set<LocalDate>, today: LocalDate): Int {

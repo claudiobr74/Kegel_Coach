@@ -87,4 +87,16 @@ class ReminderTest {
             }
         } finally {java.util.TimeZone.setDefault(previous)}
     }
+    @Test fun persistedSnoozeIsRescheduledAndDisabledReminderCancelsIt() {
+        val context=ApplicationProvider.getApplicationContext<Context>()
+        val scheduler=ReminderScheduler(context)
+        val r=ReminderEntity("persisted",8,0,127,snoozedUntil=System.currentTimeMillis()+600000)
+        val alarms=shadowOf(context.getSystemService(AlarmManager::class.java))
+        scheduler.schedule(r)
+        assertEquals(2,alarms.scheduledAlarms.size)
+        assertTrue(alarms.scheduledAlarms.any {it.triggerAtMs==r.snoozedUntil})
+        scheduler.schedule(r.copy(enabled=false))
+        assertTrue(alarms.scheduledAlarms.isEmpty())
+    }
+
 }
