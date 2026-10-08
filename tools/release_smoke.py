@@ -18,6 +18,15 @@ def tap(label):
     for attempt in range(8):
         root = screen()
         nodes = list(root.iter("node"))
+        # A slow emulator can show a launcher ANR before the app starts.
+        # Dismiss only that system launcher dialog; never hide an app ANR.
+        if any(n.get("text") == "Pixel Launcher isn't responding" for n in nodes):
+            close = next(n for n in nodes if n.get("text") == "Close app")
+            x1, y1, x2, y2 = map(int, re.findall(r"\d+", close.get("bounds")))
+            adb("shell", "input", "tap", str((x1+x2)//2), str((y1+y2)//2))
+            adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
+            time.sleep(3)
+            continue
         node = next((n for n in nodes if n.get("text") == label or n.get("content-desc") == label), None)
         if node is not None:
             break

@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.1.6: explicit 24-hour reminder entry and saved time verification.
+# Release 1.1.6: verify saved 24-hour time after emulator launcher recovery.
 on:
   workflow_dispatch:
   push:
