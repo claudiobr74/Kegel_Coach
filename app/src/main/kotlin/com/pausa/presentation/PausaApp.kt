@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.pausa.R
 import com.pausa.BuildConfig
@@ -708,24 +709,37 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
     val context=LocalContext.current
     var editing by rememberSaveable {mutableStateOf(false)}
     var editingId by rememberSaveable {mutableStateOf<String?>(null)}
-    var hour by rememberSaveable {mutableIntStateOf(8)}
-    var minute by rememberSaveable {mutableIntStateOf(0)}
+    var hourText by rememberSaveable {mutableStateOf("08")}
+    var minuteText by rememberSaveable {mutableStateOf("00")}
     var days by rememberSaveable {mutableIntStateOf(127)}
     fun edit(r:ReminderEntity?) {
         editingId=r?.id
-        hour=r?.hour ?: 8
-        minute=r?.minute ?: 0
+        hourText="%02d".format(r?.hour ?: 8)
+        minuteText="%02d".format(r?.minute ?: 0)
         days=r?.daysMask ?: 127
         editing=true
     }
+    val hour=hourText.toIntOrNull()
+    val minute=minuteText.toIntOrNull()
+    val validTime=hour!=null && hour in 0..23 && minute!=null && minute in 0..59
     if(editing)AlertDialog(
         onDismissRequest={editing=false},
         title={Title(if(editingId==null)"Novo lembrete" else "Editar lembrete")},
         text={Column(Modifier.verticalScroll(rememberScrollState())) {
-            Copy("Horário")
-            TextButton({TimePickerDialog(context,{_,h,m->hour=h;minute=m},hour,minute,true).show()}) {
-                Text("%02d:%02d".format(hour,minute),style=MaterialTheme.typography.headlineMedium)
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(hourText,{hourText=it.filter {c->c in '0'..'9'}.take(2)},
+                    label={Text("Hora (00–23)")},singleLine=true,
+                    keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+                    isError=hour==null || hour !in 0..23,
+                    modifier=Modifier.weight(1f).testTag("reminder-hour"))
+                OutlinedTextField(minuteText,{minuteText=it.filter {c->c in '0'..'9'}.take(2)},
+                    label={Text("Minuto (00–59)")},singleLine=true,
+                    keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),
+                    isError=minute==null || minute !in 0..59,
+                    modifier=Modifier.weight(1f).testTag("reminder-minute"))
             }
+            if(validTime)Text("O aviso será às %02d:%02d".format(hour,minute),fontWeight=FontWeight.SemiBold)
+            else Text("Informe uma hora de 00 a 23 e minutos de 00 a 59.",color=MaterialTheme.colorScheme.error)
             Copy("Dias da semana")
             FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                 dayNames.forEachIndexed {i,label->
@@ -741,11 +755,11 @@ private val dayNames=listOf("SEG","TER","QUA","QUI","SEX","SÁB","DOM")
         }},
         confirmButton={TextButton({
             val existing=reminders.firstOrNull {it.id==editingId}
-            if(editingId==null)create(hour,minute,days)
-            else if(existing!=null)save(existing.copy(hour=hour,minute=minute,daysMask=days))
+            if(editingId==null)create(requireNotNull(hour),requireNotNull(minute),days)
+            else if(existing!=null)save(existing.copy(hour=requireNotNull(hour),minute=requireNotNull(minute),daysMask=days))
             editing=false
             if(existing?.enabled!=false)permission()
-        },enabled=days!=0) {Text("Salvar")}},
+        },enabled=days!=0 && validTime) {Text("Salvar")}},
         dismissButton={TextButton({editing=false}) {Text("Cancelar")}}
     )
     ScrollContent {

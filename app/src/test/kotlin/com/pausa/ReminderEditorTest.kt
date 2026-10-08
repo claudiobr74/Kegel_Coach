@@ -31,7 +31,7 @@ class ReminderEditorTest {
             RemindersScreen(reminders.value,{}, {_,_,_->}, {saved.add(it);reminders.value=listOf(it)}, {})
         }}}
         compose.onNodeWithText("Editar horário e dias").performScrollTo().performClick()
-        compose.onNodeWithContentDescription("Dia DOM").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Dia DOM").performScrollTo().assertIsDisplayed()
         compose.onNodeWithContentDescription("Dia SEG").performClick()
         compose.onNodeWithText("Selecione pelo menos um dia.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Salvar").assertIsNotEnabled()
@@ -59,5 +59,45 @@ class ReminderEditorTest {
         assertEquals(0,mask)
         compose.onNodeWithText("Salvar").performClick()
         assertEquals(96,mask)
+    }
+    @Test fun correctingSevenToEightSavesEightAndShowsItWhenReopened() {
+        val reminders=mutableStateOf(listOf(ReminderEntity("time",7,0,127)))
+        val saved=mutableListOf<ReminderEntity>()
+        compose.setContent {PausaTheme(AppTheme.LIGHT) {Surface(Modifier.fillMaxSize()) {
+            RemindersScreen(reminders.value,{}, {_,_,_->}, {saved.add(it);reminders.value=listOf(it)}, {})
+        }}}
+        compose.onNodeWithText("Editar horário e dias").performScrollTo().performClick()
+        compose.onNodeWithTag("reminder-hour").performTextReplacement("08")
+        compose.onNodeWithTag("reminder-minute").performTextReplacement("00")
+        compose.onNodeWithText("O aviso será às 08:00").assertExists()
+        compose.onNodeWithText("Salvar").performClick()
+        assertEquals(8,saved.single().hour)
+        assertEquals(0,saved.single().minute)
+        assertEquals(127,saved.single().daysMask)
+        compose.onNodeWithText("08:00").assertExists()
+        compose.onNodeWithText("Editar horário e dias").performScrollTo().performClick()
+        compose.onNodeWithTag("reminder-hour").assertTextContains("08")
+        compose.onNodeWithTag("reminder-minute").assertTextContains("00")
+        compose.onNodeWithTag("reminder-hour").performTextReplacement("09")
+        compose.onNodeWithText("Cancelar").performClick()
+        assertEquals(1,saved.size)
+        compose.onNodeWithText("08:00").assertExists()
+    }
+    @Test fun invalidOrIncompleteTimesCannotBeSaved() {
+        var created=0
+        compose.setContent {PausaTheme(AppTheme.LIGHT) {Surface(Modifier.fillMaxSize()) {
+            RemindersScreen(emptyList(),{}, {_,_,_->created++}, {}, {})
+        }}}
+        compose.onNodeWithText("+ Adicionar horário").performScrollTo().performClick()
+        compose.onNodeWithTag("reminder-hour").performTextReplacement("24")
+        compose.onNodeWithText("Salvar").assertIsNotEnabled()
+        compose.onNodeWithTag("reminder-hour").performTextReplacement("08")
+        compose.onNodeWithTag("reminder-minute").performTextReplacement("60")
+        compose.onNodeWithText("Salvar").assertIsNotEnabled()
+        compose.onNodeWithTag("reminder-minute").performTextReplacement("")
+        compose.onNodeWithText("Salvar").assertIsNotEnabled()
+        compose.onNodeWithTag("reminder-minute").performTextReplacement("30")
+        compose.onNodeWithText("Salvar").assertIsEnabled().performClick()
+        assertEquals(1,created)
     }
 }

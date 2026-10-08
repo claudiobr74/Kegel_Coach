@@ -1,9 +1,9 @@
 name: Internal test bundle
-# Release 1.1.5: verify reminder persistence on compact emulator screens.
+# Release 1.1.6: verify saved 24-hour time after emulator launcher recovery.
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/monogram-startup, fix/reminder-weekdays-1.1.5]
+    branches: [main, feat/monogram-startup, fix/reminder-weekdays-1.1.5, fix/reminder-time-1.1.6]
     paths: ['.github/workflows/internal-test-bundle.yml']
 permissions:
   contents: read

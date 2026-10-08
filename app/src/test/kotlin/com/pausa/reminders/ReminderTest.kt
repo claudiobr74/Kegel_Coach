@@ -68,4 +68,23 @@ class ReminderTest {
         scheduler.schedule(r.copy(daysMask=0))
         assertTrue(alarms.scheduledAlarms.isEmpty())
     }
+    @Test fun eightOClockSchedulesAtEightInTheDeviceTimeZone() {
+        val previous=java.util.TimeZone.getDefault()
+        try {
+            val context=ApplicationProvider.getApplicationContext<Context>()
+            val scheduler=ReminderScheduler(context)
+            val alarms=shadowOf(context.getSystemService(AlarmManager::class.java))
+            for(zone in listOf("America/Sao_Paulo","America/Manaus","Europe/Berlin")) {
+                java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(zone))
+                val r=ReminderEntity("eight-$zone",8,0,127)
+                scheduler.schedule(r)
+                val fired=java.time.Instant.ofEpochMilli(alarms.scheduledAlarms.single().triggerAtMs)
+                    .atZone(java.time.ZoneId.of(zone))
+                assertEquals(8,fired.hour)
+                assertEquals(0,fired.minute)
+                if(zone=="America/Sao_Paulo")assertEquals(11,fired.withZoneSameInstant(java.time.ZoneOffset.UTC).hour)
+                scheduler.cancel(r)
+            }
+        } finally {java.util.TimeZone.setDefault(previous)}
+    }
 }
