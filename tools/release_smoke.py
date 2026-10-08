@@ -41,15 +41,18 @@ for label in ["Treinos", "Progresso", "Ajustes", "Início"]:
 for label in ["Ajustes", "Lembretes", "+ Adicionar horário", "Sábado e domingo", "Salvar"]:
     tap(label)
 assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+assert any(n.get("text") == "08:00" for n in screen().iter("node"))
 for label in ["Editar horário e dias", "Dia SEG", "Cancelar"]:
     tap(label)
 assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+assert any(n.get("text") == "08:00" for n in screen().iter("node"))
 adb("shell", "am", "force-stop", PACKAGE)
 adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/com.pausa.MainActivity")
 time.sleep(5)
 for label in ["Ajustes", "Lembretes"]:
     tap(label)
 assert any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
+assert any(n.get("text") == "08:00" for n in screen().iter("node"))
 tap("Remover")
 assert not any(n.get("text") == "SÁB · DOM" for n in screen().iter("node"))
 logs = adb("logcat", "-d", "-b", "crash")
