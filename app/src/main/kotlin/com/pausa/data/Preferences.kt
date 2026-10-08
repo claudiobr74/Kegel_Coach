@@ -18,6 +18,7 @@ class PreferencesRepository(private val context: Context) {
     private val discreet = booleanPreferencesKey("discreet")
     private val theme = stringPreferencesKey("theme")
     private val progression = booleanPreferencesKey("progression")
+    private val preparation = booleanPreferencesKey("preparation")
     private val workout = stringPreferencesKey("workout")
     private val week = intPreferencesKey("week")
     private val started = longPreferencesKey("program_started")
@@ -28,17 +29,25 @@ class PreferencesRepository(private val context: Context) {
             runCatching { Guidance.valueOf(p[guide] ?: "BOTH") }.getOrDefault(Guidance.BOTH),
             p[discreet] ?: false,
             runCatching { AppTheme.valueOf(p[theme] ?: "SYSTEM") }.getOrDefault(AppTheme.SYSTEM),
-            p[progression] ?: true),
+            p[progression] ?: true, p[preparation] ?: false),
             runCatching { Codec.workout(JSONObject(p[workout] ?: "")) }.getOrDefault(Workout("program", "Programa · semana 1",listOf(ProgressionPlan.weeks[0]))),
             (p[week] ?: 0).coerceIn(0..3), (p[started] ?: 0).coerceAtLeast(0))
     }
     suspend fun user(value: UserPreferences) { context.store.edit {
         it[onboard]=value.onboardingDone; it[guide]=value.guidance.name; it[discreet]=value.discreetScreen
-        it[theme]=value.theme.name; it[progression]=value.progressionEnabled
+        it[theme]=value.theme.name; it[progression]=value.progressionEnabled; it[preparation]=value.preparationEnabled
     } }
     suspend fun workout(value: Workout) { context.store.edit { it[workout] = Codec.workout(value).toString() } }
+    suspend fun restore(value: Settings) { context.store.edit {
+        it[onboard]=value.user.onboardingDone; it[guide]=value.user.guidance.name
+        it[discreet]=value.user.discreetScreen; it[theme]=value.user.theme.name
+        it[progression]=value.user.progressionEnabled; it[preparation]=value.user.preparationEnabled
+        it[workout]=Codec.workout(value.workout).toString(); it[week]=value.progressionWeek
+        it[started]=value.progressionStarted
+    } }
     suspend fun advance(value: Int) { require(value in 0..3); context.store.edit {
-        it[week]=value; it[started]=System.currentTimeMillis()
+        if(value!=(it[week] ?: 0))it[started]=System.currentTimeMillis()
+        it[week]=value
         it[workout]=Codec.workout(Workout("program", "Programa · semana ${value+1}",listOf(ProgressionPlan.weeks[value]))).toString()
     } }
 }

@@ -47,7 +47,7 @@ class VisualTest {
                 compose.onNodeWithText("Manual de execução").assertExists()
                 capture("manual-light")
                 compose.onNodeWithContentDescription("Voltar").performClick()
-                compose.onNodeWithText("Contraia. Relaxe. Repita.").assertExists()
+                compose.onNodeWithText("Aprenda o movimento").assertExists()
             }
         }
         compose.onNodeWithText("COMEÇAR").performScrollTo().performClick()
@@ -63,7 +63,10 @@ class VisualTest {
         capture("progress")
         compose.onNodeWithText("Ajustes").performClick()
         capture("settings")
-        compose.onNodeWithText("Escuro").performScrollTo().performClick()
+        compose.onNodeWithText("Aparência").performScrollTo().performClick()
+        compose.waitUntil(10000){compose.onAllNodesWithText("Escuro").fetchSemanticsNodes().isNotEmpty()}
+        capture("settings-theme")
+        compose.onNodeWithText("Escuro").performClick()
         compose.onNodeWithText("Início").performClick()
         compose.waitUntil(10000) {bitmap().getPixel(4,4)==android.graphics.Color.rgb(17,30,36)}
         compose.onNodeWithContentDescription("Kegel Coach").assertIsDisplayed()

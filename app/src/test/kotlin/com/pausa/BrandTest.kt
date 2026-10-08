@@ -22,8 +22,8 @@ class BrandTest {
         val context=ApplicationProvider.getApplicationContext<Context>()
         assertTrue(context.getDrawable(R.mipmap.ic_launcher) is AdaptiveIconDrawable)
         assertEquals("Kegel Coach",context.applicationInfo.loadLabel(context.packageManager).toString())
-        assertEquals("1.1.6",BuildConfig.VERSION_NAME)
-        assertEquals(12,BuildConfig.VERSION_CODE)
+        assertEquals("1.2.0",BuildConfig.VERSION_NAME)
+        assertEquals(13,BuildConfig.VERSION_CODE)
         assertNotNull(context.getDrawable(R.drawable.ic_notification))
         val canvasBitmap=Bitmap.createBitmap(432,432,Bitmap.Config.ARGB_8888)
         context.getDrawable(R.mipmap.ic_launcher)!!.apply {setBounds(0,0,432,432);draw(Canvas(canvasBitmap))}

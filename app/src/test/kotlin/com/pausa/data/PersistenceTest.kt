@@ -38,6 +38,18 @@ class PersistenceTest {
     @Test fun mixedWorkoutSurvivesSerialization() {
         assertEquals(WorkoutPreset.mixed,Codec.workout(JSONObject(Codec.workout(WorkoutPreset.mixed).toString())))
     }
+    @Test fun returningToCurrentProgramKeepsItsProgressWindow()=runBlocking {
+        val prefs=PreferencesRepository(context);val previous=prefs.settings.first()
+        try {
+            prefs.restore(Settings(workout=WorkoutPreset.quick,progressionWeek=1,progressionStarted=123456L))
+            prefs.advance(1)
+            val restored=prefs.settings.first()
+            assertEquals(123456L,restored.progressionStarted)
+            assertEquals(1,restored.progressionWeek)
+            assertEquals("program",restored.workout.id)
+            assertEquals(listOf(ProgressionPlan.weeks[1]),restored.workout.blocks)
+        } finally {prefs.restore(previous)}
+    }
     @Test fun activeSessionRoundTripKeepsExactElapsedTime()=runBlocking {
         val s=WorkoutSession("id",WorkoutPreset.intermediate,123456,47321,SessionStatus.PAUSED)
         db.dao().saveActive(ActiveSessionEntity(payload=Codec.session(s,1)))

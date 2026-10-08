@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import android.os.Build
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.pausa.MainActivity
 import com.pausa.R
@@ -19,6 +20,21 @@ import java.time.*
 fun ReminderEntity.domain()=Reminder(id,hour,minute,DayOfWeek.entries.filter { daysMask and (1 shl (it.value-1)) != 0 }.toSet(),enabled)
 
 class ReminderScheduler(private val context:Context) {
+    companion object {
+        const val FIRE="com.pausa.reminder.FIRE";const val SNOOZE="com.pausa.reminder.SNOOZE"
+        fun notificationStatus(context:Context):String? {
+            if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
+                return "Permissão de notificações desativada."
+            if(!NotificationManagerCompat.from(context).areNotificationsEnabled())return "Notificações do aplicativo bloqueadas."
+            if(context.getSystemService(NotificationManager::class.java).getNotificationChannel("reminders")?.importance==NotificationManager.IMPORTANCE_NONE)
+                return "Canal de lembretes bloqueado."
+            return null
+        }
+        fun openSettings(context:Context) {
+            context.startActivity(Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,context.packageName))
+        }
+    }
     private val alarm=context.getSystemService(AlarmManager::class.java)
     private fun pending(r:ReminderEntity,snooze:Boolean=false,minutes:Int=0):PendingIntent =
         PendingIntent.getBroadcast(context,0,Intent(context,ReminderReceiver::class.java)
@@ -34,6 +50,9 @@ class ReminderScheduler(private val context:Context) {
         }
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
             r.domain().nextAfter(ZonedDateTime.now()).toInstant().toEpochMilli(),pending(r))
+        if(r.snoozedUntil>System.currentTimeMillis())
+            alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,r.snoozedUntil,pending(r,true))
+        Diagnostics.record(context,"Lembrete agendado")
     }
     fun cancel(r:ReminderEntity) {alarm.cancel(pending(r));alarm.cancel(pending(r,true))}
     fun snooze(r:ReminderEntity,minutes:Int) {
@@ -41,7 +60,7 @@ class ReminderScheduler(private val context:Context) {
         alarm.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,android.os.SystemClock.elapsedRealtime()+minutes*60_000L,pending(r,true))
     }
     fun notify(r:ReminderEntity) {
-        if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return
+        if(notificationStatus(context)!=null) {Diagnostics.record(context,"Notificação bloqueada");return}
         val manager=context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel("reminders","Lembretes de treino",NotificationManager.IMPORTANCE_DEFAULT).apply {lockscreenVisibility=Notification.VISIBILITY_PRIVATE})
         val start=PendingIntent.getActivity(context,0,Intent(context,MainActivity::class.java).setAction("reminder-start"),
@@ -52,15 +71,15 @@ class ReminderScheduler(private val context:Context) {
         expanded.setOnClickPendingIntent(R.id.snooze30,pending(r,minutes=30))
         expanded.setOnClickPendingIntent(R.id.snooze60,pending(r,minutes=60))
         val notification=NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.app_name)).setContentText(context.getString(R.string.reminder_title)).setContentIntent(start)
+            .setContentTitle(context.getString(R.string.app_name)).setContentText(if(r.id=="test")"Teste de lembrete. Seus avisos estão funcionando." else context.getString(R.string.reminder_title)).setContentIntent(start)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setAutoCancel(true)
             .setPublicVersion(NotificationCompat.Builder(context,"reminders").setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(context.getString(R.string.app_name)).setContentText(context.getString(R.string.reminder_title)).build())
+                .setContentTitle("Pausa").setContentText("Um momento para sua rotina.").build())
             .setStyle(NotificationCompat.DecoratedCustomViewStyle()).setCustomBigContentView(expanded)
             .addAction(0,"Iniciar",start).addAction(0,"Adiar 10 min",pending(r,minutes=10)).build()
         manager.notify(r.id,200,notification)
+        Diagnostics.record(context,"Notificação exibida")
     }
-    companion object {const val FIRE="com.pausa.reminder.FIRE";const val SNOOZE="com.pausa.reminder.SNOOZE"}
 }
 
 class ReminderReceiver:BroadcastReceiver() {
@@ -74,14 +93,19 @@ class ReminderReceiver:BroadcastReceiver() {
                 val scheduler=ReminderScheduler(context)
                 if(intent.action==ReminderScheduler.SNOOZE) {
                     val minutes=intent.getIntExtra("minutes",0)
-                    if(minutes in listOf(10,30,60))scheduler.snooze(r,minutes)
+                    if(minutes in listOf(10,30,60)) {
+                        PausaDatabase.get(context).dao().setSnooze(r.id,System.currentTimeMillis()+minutes*60_000L)
+                        scheduler.snooze(r,minutes)
+                        Diagnostics.record(context,"Lembrete adiado")
+                    }
                     context.getSystemService(NotificationManager::class.java).cancel(r.id,200)
                 } else {
                     val snoozed=intent.getBooleanExtra("snoozed",false)
                     if(snoozed || LocalDate.now().dayOfWeek in r.domain().days)scheduler.notify(r)
+                    if(snoozed)PausaDatabase.get(context).dao().setSnooze(r.id,0)
                     if(!snoozed)scheduler.schedule(r)
                 }
-            } finally {result.finish()}
+            } catch(e:Exception) { Diagnostics.record(context,"Falha ao processar lembrete") } finally {result.finish()}
         }
     }
 }
@@ -92,6 +116,7 @@ class RescheduleReceiver:BroadcastReceiver() {
         val result=goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {PausaDatabase.get(context).dao().remindersOnce().forEach {ReminderScheduler(context).schedule(it)}}
+            catch(e:Exception) {Diagnostics.record(context,"Falha ao reagendar lembretes")}
             finally {result.finish()}
         }
     }
