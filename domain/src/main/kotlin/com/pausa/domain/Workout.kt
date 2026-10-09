@@ -20,12 +20,15 @@ data class Workout(
     val durationMillis: Long get() = timeline().sumOf { it.durationMillis }
     val contractions: Int get() = blocks.sumOf { it.repetitions } * sets
     fun timeline(): List<WorkoutPhase> = buildList {
+        val repetitionsPerSet = blocks.sumOf { it.repetitions }
         for (set in 1..sets) {
             var rep = 0
             for (block in blocks) repeat(block.repetitions) {
                 rep++
                 add(WorkoutPhase(Phase.CONTRACT, block.contractSeconds * 1000L, set, rep))
-                add(WorkoutPhase(Phase.RELAX, block.relaxSeconds * 1000L, set, rep))
+                // The set interval replaces the final relaxation; the last set ends immediately.
+                if (rep < repetitionsPerSet)
+                    add(WorkoutPhase(Phase.RELAX, block.relaxSeconds * 1000L, set, rep))
             }
             if (set < sets) add(WorkoutPhase(Phase.REST, restSeconds * 1000L, set, rep))
         }

@@ -1,5 +1,5 @@
 name: Internal test bundle
-# Release 1.2.0: validate data continuity, notification diagnostics and optimized flows.
+# Release 1.2.1: clear training title and no duplicate rest at set boundaries.
 on:
   workflow_dispatch:
   push:

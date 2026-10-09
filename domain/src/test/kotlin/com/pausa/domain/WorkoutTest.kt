@@ -5,14 +5,14 @@ import java.time.*
 
 class WorkoutTest {
     @Test fun durationsIncludeOnlyRealPhases() {
-        assertEquals(90_000L, WorkoutPreset.beginner.durationMillis)
-        assertEquals(230_000L, WorkoutPreset.intermediate.durationMillis)
-        assertEquals(540_000L, WorkoutPreset.advanced.durationMillis)
-        assertEquals(20_000L, WorkoutPreset.quick.durationMillis)
-        assertEquals(110_000L, WorkoutPreset.mixed.durationMillis)
+        assertEquals(84_000L, WorkoutPreset.beginner.durationMillis)
+        assertEquals(220_000L, WorkoutPreset.intermediate.durationMillis)
+        assertEquals(516_000L, WorkoutPreset.advanced.durationMillis)
+        assertEquals(19_000L, WorkoutPreset.quick.durationMillis)
+        assertEquals(109_000L, WorkoutPreset.mixed.durationMillis)
     }
     @Test fun maxAndInvalidSettings() {
-        assertEquals(32700000L, Workout("max","Max",listOf(WorkoutBlock(30,30,50)),10,300).durationMillis)
+        assertEquals(32400000L, Workout("max","Max",listOf(WorkoutBlock(30,30,50)),10,300).durationMillis)
         assertFailsWith<IllegalArgumentException> { WorkoutBlock(0, 5, 10) }
         assertFailsWith<IllegalArgumentException> { WorkoutBlock(5, 31, 10) }
         assertFailsWith<IllegalArgumentException> { WorkoutBlock(5, 5, 51) }
@@ -48,16 +48,32 @@ class WorkoutTest {
         now += 6000
         assertEquals(2, restored.state().repetition)
     }
-    @Test fun restOnlyBetweenSetsAndCompletionAfterLastRelaxation() {
+    @Test fun restReplacesFinalRelaxationAndLastContractionCompletesSession() {
         var now = 0L
         val w = Workout("x","x",listOf(WorkoutBlock(1,1,1)),2,10)
         val timer = WorkoutTimer({now},session(w))
-        now=2000; assertEquals(Phase.REST,timer.state().phase)
-        now=12000; assertEquals(2,timer.state().set)
-        now=13000; assertEquals(SessionStatus.RUNNING,timer.state().session.status)
-        now=14000; assertEquals(SessionStatus.COMPLETED,timer.state().session.status)
+        now=1000; assertEquals(Phase.REST,timer.state().phase)
+        now=11000; assertEquals(2,timer.state().set)
+        now=11999; assertEquals(SessionStatus.RUNNING,timer.state().session.status)
+        now=12000; assertEquals(SessionStatus.COMPLETED,timer.state().session.status)
         assertEquals(Phase.FINISHED,timer.state().phase)
-        now=20000; assertEquals(14000L,timer.state().session.elapsedMillis)
+        now=20000; assertEquals(12000L,timer.state().session.elapsedMillis)
+    }
+    @Test fun mixedBlocksKeepRelaxationUntilTheFinalRepetitionOfEachSet() {
+        val w=Workout("mixed","Mixed",listOf(WorkoutBlock(5,5,2),WorkoutBlock(1,1,2)),3,30)
+        val phases=w.timeline()
+        assertEquals(12,phases.count {it.phase==Phase.CONTRACT})
+        assertEquals(9,phases.count {it.phase==Phase.RELAX})
+        assertEquals(2,phases.count {it.phase==Phase.REST})
+        assertEquals(Phase.CONTRACT,phases.last().phase)
+        phases.filter {it.phase==Phase.REST}.forEach {rest ->
+            val index=phases.indexOf(rest)
+            assertEquals(Phase.CONTRACT,phases[index-1].phase)
+            assertEquals(4,phases[index-1].repetition)
+            assertEquals(Phase.CONTRACT,phases[index+1].phase)
+            assertEquals(1,phases[index+1].repetition)
+        }
+        assertEquals(Phase.RELAX,phases[3].phase)
     }
     @Test fun cancellationNeverCompletes() {
         var now=0L

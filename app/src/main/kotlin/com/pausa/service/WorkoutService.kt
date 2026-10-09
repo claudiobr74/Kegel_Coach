@@ -274,11 +274,11 @@ class WorkoutService : Service() {
     private fun notification(paused:Boolean):Notification {
         val content=PendingIntent.getActivity(this,0,Intent(this,MainActivity::class.java),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         fun action(a:String)=PendingIntent.getForegroundService(this,a.hashCode(),Intent(this,WorkoutService::class.java).setAction(a),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Pausa")
+        return NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Treino")
             .setContentText(if(paused)"Sessão pausada" else "Seu ritmo continua")
             .setContentIntent(content).setOngoing(true).setSilent(true)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-            .setPublicVersion(NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Pausa").setContentText("Sessão em andamento").build())
+            .setPublicVersion(NotificationCompat.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_notification).setContentTitle("Treino").setContentText("Sessão em andamento").build())
             .addAction(0,if(paused)"Retomar" else "Pausar",action(if(paused)RESUME else PAUSE))
             .addAction(0,"Encerrar",action(CANCEL)).build()
     }

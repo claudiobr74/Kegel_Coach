@@ -152,7 +152,7 @@ import java.util.Locale
             val destinations=listOf("home","programs","progress","settings")
             Scaffold(containerColor=MaterialTheme.colorScheme.background,
                 topBar={if(route!="home")TopAppBar(title={Title(when(route){
-                    "session"->if((sessionOptions ?: current.user).discreetScreen)"Pausa" else "Treino"
+                    "session"->"Treino"
                     "programs"->"Treinos";"custom"->"Personalizar treino";"progress"->"Progresso"
                     "reminders"->"Lembretes";"pocket"->"Modo bolso";"finished"->"Treino concluído"
                     "manual"->stringResource(R.string.manual_title);"data"->"Cópia e restauração";"help"->"Ajuda"
